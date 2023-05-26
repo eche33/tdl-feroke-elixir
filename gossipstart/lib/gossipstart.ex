@@ -37,7 +37,7 @@ defmodule Gossipstart do
   def start(_type, _args) do
     # Although we don't use the supervisor name below directly,
     # it can be useful when debugging or introspecting the system.
-    Gossipstart.NodeSupervisor.start_link(name: Gossipstart.NodeSupervisor)
+    Gossipstart.Supervisor.start_link(name: Gossipstart.Supervisor)
   end
 
 end
