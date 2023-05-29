@@ -1,17 +1,17 @@
 defmodule Gossipstart.Node do
   use GenServer
 
-  # def start_link(opts) do
-  #   GenServer.start_link(__MODULE__, node_number_to_rumor, opts)
-  # end
+  def start_link(name) do
+    GenServer.start_link(__MODULE__, name , name: name)
+  end
 
   def send_message(node_from, node_to_call, message) do
     GenServer.call(node_from, {:send_message, node_to_call, message})
   end
 
   @impl true
-  def init([node_number_to_rumor]) do
-    {:ok, [node_number_to_rumor]}
+  def init(name) do
+    {:ok, %{}}
   end
 
   @impl true

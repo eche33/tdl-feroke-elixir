@@ -24,6 +24,14 @@ defmodule Gossipstart.Registry do
     GenServer.call(server, {:create, rumor})
   end
 
+  def create_node(server, node_name) do
+    GenServer.cast(server, {:create_node, node_name})
+  end
+
+  def create_all_nodes(server) do
+    GenServer.cast(server, {:create_all_nodes})
+  end
+
   ## Defining GenServer Callbacks
 
   @impl true
@@ -48,6 +56,22 @@ defmodule Gossipstart.Registry do
   #     {:noreply, {names, refs}}
   #   end
   # end
+
+  @impl true
+  def handle_cast({:create_node, name}, state) do
+    {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, name})
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast({:create_all_nodes}, state) do
+    {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, :Node1})
+    {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, :Node2})
+    {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, :Node3})
+    {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, :Node4})
+
+    {:noreply, state}
+  end
 
   @impl true
   def handle_call({:create, rumor}, _from, state) do
