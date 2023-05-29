@@ -65,10 +65,10 @@ defmodule Gossipstart.Registry do
 
   @impl true
   def handle_cast({:create_all_nodes}, state) do
-    {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, :Node1})
-    {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, :Node2})
-    {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, :Node3})
-    {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, :Node4})
+    {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, [:Node1, 2]})
+    {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, [:Node2, 3]})
+    {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, [:Node3, 4]})
+    {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, [:Node4, 1]})
 
     {:noreply, state}
   end
