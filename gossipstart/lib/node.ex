@@ -2,6 +2,7 @@ defmodule Gossipstart.Node do
   use GenServer
 
   def start_link([name, node_to_rumor]) do
+    IO.puts("Soy el nodo #{name} y mi vecino es #{node_to_rumor}")
     GenServer.start_link(__MODULE__, [node_to_rumor] , name: name)
   end
 
@@ -46,6 +47,28 @@ defmodule Gossipstart.Node do
       node_alias = String.to_atom("Node#{node_to_rumor}")
       GenServer.call(node_alias, {:rumor, content, total_nodes - 1})
       {:reply, :ok, state}
+    end
+  end
+
+  @impl true
+  def handle_cast({:rumor, content, total_nodes}, state) do
+    [node_to_rumor] = state
+
+    if total_nodes == 0 do
+      # IO.puts("#{inspect self()}: contador de rumor: #{rumor_sent?}")
+      # IO.puts("#{inspect self()}: total de nodos: #{total_nodes}")
+      IO.puts("#{inspect self()}: Rumor recibido: #{content}")
+      IO.puts("Todos tienen el rumor")
+      {:noreply, state}
+    end
+
+    if total_nodes > 0 do
+      # IO.puts("#{inspect self()}: contador de rumor: #{rumor_sent?}")
+      # IO.puts("#{inspect self()}: total de nodos: #{total_nodes}")
+      IO.puts "#{inspect self()}: Rumor recibido: #{content} "
+      node_alias = String.to_atom("Node#{node_to_rumor}")
+      GenServer.cast(node_alias, {:rumor, content, total_nodes - 1})
+      {:noreply, state}
     end
   end
 

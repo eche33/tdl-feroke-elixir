@@ -70,6 +70,9 @@ defmodule Gossipstart.Registry do
     {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, [:Node3, 4]})
     {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, [:Node4, 1]})
 
+    total_nodes = 4
+    GenServer.cast(:Node1, {:rumor, "rumor", total_nodes - 1})
+
     {:noreply, state}
   end
 
