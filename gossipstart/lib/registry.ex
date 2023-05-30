@@ -1,5 +1,6 @@
 defmodule Gossipstart.Registry do
   use GenServer
+  @me __MODULE__
 
   @doc """
   Starts the registry.
@@ -12,8 +13,8 @@ defmodule Gossipstart.Registry do
     GenServer.call(server, {:create, rumor})
   end
 
-  def create_node(server, node_name) do
-    GenServer.cast(server, {:create_node, node_name})
+  def create_node(node_name) do
+    GenServer.cast(@me, {:create_node, node_name})
   end
 
   def create_all_nodes(server) do
