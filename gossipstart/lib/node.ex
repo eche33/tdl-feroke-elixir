@@ -6,26 +6,9 @@ defmodule Gossipstart.Node do
     GenServer.start_link(__MODULE__, [node_to_rumor] , name: name)
   end
 
-  def send_message(node_from, node_to_call, message) do
-    GenServer.call(node_from, {:send_message, node_to_call, message})
-  end
-
   @impl true
   def init([node_number_to_rumor]) do
     {:ok, [node_number_to_rumor]}
-  end
-
-  @impl true
-  def handle_call({:receive_message, content}, from, state) do
-    IO.puts "#{inspect self()}: Mensaje recibido: #{content} de #{inspect from}"
-    {:reply, :ok, state}
-  end
-
-  @impl true
-  def handle_call({:send_message, node_to_call, content}, _from, state) do
-    IO.puts "#{inspect self()}: Mensaje enviado: #{content} a #{inspect node_to_call}"
-    GenServer.call(node_to_call, {:receive_message, content})
-    {:reply, :ok, state}
   end
 
   @impl true
