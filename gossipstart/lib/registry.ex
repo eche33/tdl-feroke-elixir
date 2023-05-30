@@ -32,11 +32,15 @@ defmodule Gossipstart.Registry do
     GenServer.cast(server, {:create_all_nodes})
   end
 
+  def received_rumor() do
+    GenServer.call(@me, {:received_rumor})
+  end
+
   ## Defining GenServer Callbacks
 
   @impl true
   def init(:ok) do
-    {:ok, %{}}
+    {:ok, 2}
   end
 
   @impl true
@@ -66,11 +70,11 @@ defmodule Gossipstart.Registry do
   @impl true
   def handle_cast({:create_all_nodes}, state) do
     {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, [:Node1, 2]})
-    {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, [:Node2, 3]})
-    {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, [:Node3, 4]})
-    {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, [:Node4, 1]})
+    {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, [:Node2, 1]})
+    # {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, [:Node3, 4]})
+    # {:ok, pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, [:Node4, 1]})
 
-    total_nodes = 4
+    total_nodes = 2
     GenServer.cast(:Node1, {:rumor, "rumor", total_nodes - 1})
 
     {:noreply, state}
@@ -90,6 +94,20 @@ defmodule Gossipstart.Registry do
     total_nodes = 4
     GenServer.call(:Node1, {:rumor, rumor, total_nodes - 1})
     {:reply, state}
+  end
+
+  @impl true
+  def handle_call({:rumor_received}, from, count) do
+    IO.puts("Node #{inspect from} received rumor")
+
+    count = count - 1
+    if count == 0 do
+      IO.puts("Todos tienen el rumor")
+      System.halt(0)
+    else
+      {:reply, count, count}
+    end
+
   end
 
 

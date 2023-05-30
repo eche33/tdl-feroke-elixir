@@ -37,7 +37,8 @@ defmodule Gossipstart.Node do
       # IO.puts("#{inspect self()}: total de nodos: #{total_nodes}")
       IO.puts("#{inspect self()}: Rumor recibido: #{content} de #{inspect from}")
       IO.puts("Todos tienen el rumor")
-      {:no_reply, :ok, state}
+      System.halt(0)
+      {:reply, :ok, state}
     end
 
     if total_nodes > 0 do
@@ -59,6 +60,7 @@ defmodule Gossipstart.Node do
       # IO.puts("#{inspect self()}: total de nodos: #{total_nodes}")
       IO.puts("#{inspect self()}: Rumor recibido: #{content}")
       IO.puts("Todos tienen el rumor")
+      System.halt(0)
       {:noreply, state}
     end
 
@@ -70,6 +72,13 @@ defmodule Gossipstart.Node do
       GenServer.cast(node_alias, {:rumor, content, total_nodes - 1})
       {:noreply, state}
     end
+  end
+
+  @impl true
+  def handle_info(msg, state) do
+    require Logger
+    Logger.debug("Unexpected message in KV.Registry: #{inspect(msg)}")
+    {:noreply, state}
   end
 
 end
