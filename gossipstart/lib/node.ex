@@ -1,14 +1,14 @@
 defmodule Gossipstart.Node do
   use GenServer
 
-  def start_link([name, node_to_rumor]) do
-    IO.puts("Soy el nodo #{name} y mi vecino es #{node_to_rumor}")
-    GenServer.start_link(__MODULE__, [node_to_rumor] , name: name)
+  def start_link(name) do
+    IO.puts("Soy el nodo #{name}")
+    GenServer.start_link(__MODULE__, [] , name: name)
   end
 
   @impl true
-  def init([node_number_to_rumor]) do
-    {:ok, [node_number_to_rumor]}
+  def init([]) do
+    {:ok, []}
   end
 
   @impl true
