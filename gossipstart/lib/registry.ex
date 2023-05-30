@@ -25,8 +25,12 @@ defmodule Gossipstart.Registry do
     GenServer.call(@me, {:create_gossip, number_of_nodes})
   end
 
-  def start_gossip() do
-    GenServer.cast(@me, {:start_gossip})
+  def start_gossip(rumor) do
+    GenServer.cast(@me, {:start_gossip, rumor})
+  end
+
+  def get_node_to_rumor(node_asking) do
+    GenServer.call(@me, {:get_node_to_rumor, node_asking})
   end
 
   ## Defining GenServer Callbacks
@@ -43,9 +47,22 @@ defmodule Gossipstart.Registry do
   end
 
   @impl true
-  def handle_cast({:start_gossip}, state) do
-    IO.puts("Esto me llegó #{inspect state}")
-    {:noreply, state}
+  def handle_cast({:start_gossip, rumor}, nodes) do
+    IO.puts("Esto me llegó #{inspect nodes}")
+    random_node = Enum.random(nodes)
+    IO.puts("Nodo random: #{inspect random_node}")
+
+    GenServer.call(random_node, {:rumor, rumor, length(nodes) - 1})
+
+    {:noreply, nodes}
+  end
+
+  @impl true
+  def handle_call({:get_node_to_rumor, node_asking}, _from, nodes) do
+    IO.puts("Nodo preguntando: #{inspect node_asking}")
+    candidates = List.delete(nodes, node_asking)
+    selected_node = Enum.random(candidates)
+    {:reply, selected_node, nodes}
   end
 
   @impl true
@@ -59,6 +76,7 @@ defmodule Gossipstart.Registry do
     end)
 
     IO.puts("Nodos creados: #{inspect nodes}")
+    Gossipstart.GossipHandler.add_nodes(nodes)
     {:reply, :ok, nodes}
   end
 

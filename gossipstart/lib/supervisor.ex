@@ -9,6 +9,7 @@ defmodule Gossipstart.Supervisor do
   def init(:ok) do
     children = [
       {Gossipstart.Registry, name: Gossipstart.Registry},
+      {Gossipstart.GossipHandler, name: Gossipstart.GossipHandler},
       {DynamicSupervisor, name: Gossipstart.NodeSupervisor, strategy: :one_for_one}
     ]
 
