@@ -25,11 +25,15 @@ defmodule Gossipstart.Registry do
     GenServer.call(@me, {:create_gossip, number_of_nodes})
   end
 
+  def start_gossip() do
+    GenServer.cast(@me, {:start_gossip})
+  end
+
   ## Defining GenServer Callbacks
 
   @impl true
   def init(:ok) do
-    {:ok, 2}
+    {:ok, []}
   end
 
   @impl true
@@ -39,7 +43,13 @@ defmodule Gossipstart.Registry do
   end
 
   @impl true
-  def handle_call({:create_gossip, number_of_nodes}, _from, state) do
+  def handle_cast({:start_gossip}, state) do
+    IO.puts("Esto me llegó #{inspect state}")
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_call({:create_gossip, number_of_nodes}, _from, _state) do
     nodes_list = []
 
     nodes = Enum.reduce(1..number_of_nodes, nodes_list, fn(i, acc) ->
@@ -49,7 +59,7 @@ defmodule Gossipstart.Registry do
     end)
 
     IO.puts("Nodos creados: #{inspect nodes}")
-    {:reply, :ok, state}
+    {:reply, :ok, nodes}
   end
 
   @impl true
