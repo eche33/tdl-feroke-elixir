@@ -40,10 +40,20 @@ defmodule Gossipstart.Registry do
 
   @impl true
   def handle_call({:create_gossip, number_of_nodes}, _from, state) do
-    for i <- 1..number_of_nodes do
+    nodes_list = []
+    # for i <- 1..number_of_nodes do
+    #   node_name = String.to_atom("Node#{i}")
+    #   nodes = [node_name | nodes]
+    #   create_node(node_name)
+    # end
+
+    nodes = Enum.reduce(1..number_of_nodes, nodes_list, fn(i, acc) ->
       node_name = String.to_atom("Node#{i}")
       create_node(node_name)
-    end
+      [node_name | acc]
+    end)
+
+    IO.puts("Nodos creados: #{inspect nodes}")
     {:reply, :ok, state}
   end
 
