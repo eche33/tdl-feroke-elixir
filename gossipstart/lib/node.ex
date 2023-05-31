@@ -2,7 +2,6 @@ defmodule Gossipstart.Node do
   use GenServer
 
   def start_link(name) do
-    IO.puts("Soy el nodo #{name}")
     GenServer.start_link(__MODULE__, [name] , name: name)
   end
 
@@ -23,8 +22,8 @@ defmodule Gossipstart.Node do
     if total_nodes == 0 do
       # IO.puts("#{inspect self()}: contador de rumor: #{rumor_sent?}")
       # IO.puts("#{inspect self()}: total de nodos: #{total_nodes}")
-      IO.puts("#{inspect self()}: Rumor recibido: #{content}")
-      IO.puts("Todos tienen el rumor")
+      IO.puts("#{inspect self()}: Rumor received: #{content}")
+      IO.puts("Everybody knows the rumor!")
       # System.halt(0)
       # {:noreply, state}
     end
@@ -32,7 +31,7 @@ defmodule Gossipstart.Node do
     if total_nodes > 0 do
       # IO.puts("#{inspect self()}: contador de rumor: #{rumor_sent?}")
       # IO.puts("#{inspect self()}: total de nodos: #{total_nodes}")
-      IO.puts "#{inspect self()}: Rumor recibido: #{content}"
+      IO.puts "#{inspect self()}: Rumor received: #{content}"
       GenServer.cast(node_to_rumor, {:rumor, content, total_nodes - 1})
       # {:noreply, state}
     end

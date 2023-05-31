@@ -30,9 +30,8 @@ defmodule Gossipstart.Registry do
 
   @impl true
   def handle_cast({:start_gossip, rumor}, nodes) do
-    IO.puts("Esto me llegó #{inspect nodes}")
     random_node = Enum.random(nodes)
-    IO.puts("Nodo random: #{inspect random_node}")
+    IO.puts("Random initial node: #{inspect random_node}")
 
     GenServer.cast(random_node, {:rumor, rumor, length(nodes) - 1})
 
@@ -49,7 +48,6 @@ defmodule Gossipstart.Registry do
       [node_name | acc]
     end)
 
-    IO.puts("Nodos creados: #{inspect nodes}")
     Gossipstart.GossipHandler.add_nodes(nodes)
     {:reply, :ok, nodes}
   end

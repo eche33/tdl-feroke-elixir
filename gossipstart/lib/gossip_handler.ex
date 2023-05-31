@@ -21,7 +21,6 @@ defmodule Gossipstart.GossipHandler do
 
   @impl true
   def handle_call({:get_node_to_rumor, node_asking}, _from, nodes) do
-    IO.puts("Nodo preguntando: #{inspect node_asking}")
     candidates = List.delete(nodes, node_asking)
     selected_node = Enum.random(candidates)
     {:reply, selected_node, nodes}
