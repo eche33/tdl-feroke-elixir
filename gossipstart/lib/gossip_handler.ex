@@ -18,6 +18,10 @@ defmodule Gossipstart.GossipHandler do
     GenServer.cast(@me, {:notify_rumor_received, node})
   end
 
+  def everybody_knows_the_rumor?() do
+    GenServer.call(@me, :everybody_knows_the_rumor?)
+  end
+
   defp update_nodes_that_received_rumor(nodes_that_received_rumor, node) do
     if Enum.member?(nodes_that_received_rumor, node) do
       nodes_that_received_rumor
@@ -42,6 +46,18 @@ defmodule Gossipstart.GossipHandler do
   end
 
   @impl true
+  def handle_call(:everybody_knows_the_rumor?, _from, state) do
+    [nodes, nodes_that_received_rumor] = state
+
+    if Enum.count(nodes_that_received_rumor) == Enum.count(nodes) do
+      {:reply, true, state}
+    else
+      {:reply, false, state}
+    end
+
+  end
+
+  @impl true
   def handle_cast({:add_nodes, nodes}, state) do
     [_, nodes_that_received_rumor] = state
     {:noreply, [nodes, nodes_that_received_rumor]}
@@ -55,7 +71,7 @@ defmodule Gossipstart.GossipHandler do
 
     if Enum.count(nodes_that_received_rumor) == Enum.count(nodes) do
       IO.puts("All nodes received the rumor")
-      #Process.exit(self(), :normal)
+      # Process.exit(self(), :normal)
     end
 
     new_state = [nodes, nodes_that_received_rumor]

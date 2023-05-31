@@ -14,13 +14,14 @@ defmodule Gossipstart.Node do
   def handle_cast({:rumor, content}, state) do
     [name, remaining_rumor_times] = state
 
-    IO.puts("My name is #{name}")
+    everybody_knows_the_rumor = Gossipstart.GossipHandler.everybody_knows_the_rumor?()
 
-    node_to_rumor = Gossipstart.GossipHandler.get_node_to_rumor(name)
-    IO.puts("Node to rumor: #{inspect node_to_rumor}")
-
-    if remaining_rumor_times > 0 do
+    if remaining_rumor_times > 0 and not everybody_knows_the_rumor do
+      IO.puts("My name is #{name}")
+      node_to_rumor = Gossipstart.GossipHandler.get_node_to_rumor(name)
+      IO.puts("Node to rumor: #{inspect node_to_rumor}")
       IO.puts "#{inspect self()}: Rumor received: #{content}"
+
       Gossipstart.GossipHandler.notify_rumor_received(name)
       GenServer.cast(node_to_rumor, {:rumor, content})
     end
