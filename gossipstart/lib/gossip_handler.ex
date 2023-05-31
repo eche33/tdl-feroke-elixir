@@ -38,12 +38,13 @@ defmodule Gossipstart.GossipHandler do
   def init(:ok) do
     nodes = []
     nodes_that_received_rumor = []
-    {:ok, [nodes, nodes_that_received_rumor]}
+    steps_taken = 0
+    {:ok, [nodes, nodes_that_received_rumor, steps_taken]}
   end
 
   @impl true
   def handle_call({:get_node_to_rumor, node_asking}, _from, state) do
-    [nodes, _] = state
+    [nodes, _, _] = state
     candidates = List.delete(nodes, node_asking)
     selected_node = Enum.random(candidates)
     {:reply, selected_node, state}
@@ -51,7 +52,7 @@ defmodule Gossipstart.GossipHandler do
 
   @impl true
   def handle_call(:everybody_knows_the_rumor?, _from, state) do
-    [nodes, nodes_that_received_rumor] = state
+    [nodes, nodes_that_received_rumor, _] = state
 
     if Enum.count(nodes_that_received_rumor) == Enum.count(nodes) do
       {:reply, true, state}
@@ -63,32 +64,31 @@ defmodule Gossipstart.GossipHandler do
 
   @impl true
   def handle_call(:reset_state, _from, state) do
-    [nodes, _] = state
+    [nodes, _, _] = state
 
-    new_state = [nodes, []]
+    new_state = [nodes, [], 0]
     {:reply, :ok, new_state}
   end
 
   @impl true
   def handle_cast({:add_nodes, nodes}, state) do
-    [_, nodes_that_received_rumor] = state
-    {:noreply, [nodes, nodes_that_received_rumor]}
+    [_, nodes_that_received_rumor, steps_taken] = state
+    {:noreply, [nodes, nodes_that_received_rumor, steps_taken]}
   end
 
   @impl true
   def handle_cast({:notify_rumor_received, node}, state) do
-    [nodes, nodes_that_received_rumor] = state
+    [nodes, nodes_that_received_rumor, steps_taken] = state
 
     nodes_that_received_rumor = update_nodes_that_received_rumor(nodes_that_received_rumor, node)
 
     if Enum.count(nodes_that_received_rumor) == Enum.count(nodes) do
       IO.puts("All nodes received the rumor")
-      new_state = [nodes, []]
-      {:noreply, new_state}
+      IO.puts("Steps taken: #{steps_taken}")
       # Process.exit(self(), :normal)
     end
 
-    new_state = [nodes, nodes_that_received_rumor]
+    new_state = [nodes, nodes_that_received_rumor, steps_taken + 1]
     {:noreply, new_state}
   end
 

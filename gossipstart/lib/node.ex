@@ -19,7 +19,7 @@ defmodule Gossipstart.Node do
     if not everybody_knows_the_rumor do
       IO.puts("My name is #{name}")
       node_to_rumor = Gossipstart.GossipHandler.get_node_to_rumor(name)
-      IO.puts("Node to rumor: #{inspect node_to_rumor}")
+      # IO.puts("Node to rumor: #{inspect node_to_rumor}")
       IO.puts "#{inspect self()}: Rumor received: #{content}"
 
       Gossipstart.GossipHandler.notify_rumor_received(name)
