@@ -12,11 +12,11 @@ defmodule Gossipstart.Node do
 
   @impl true
   def handle_cast({:rumor, content}, state) do
-    [name, remaining_rumor_times] = state
+    [name, _] = state
 
     everybody_knows_the_rumor = Gossipstart.GossipHandler.everybody_knows_the_rumor?()
 
-    if remaining_rumor_times > 0 and not everybody_knows_the_rumor do
+    if not everybody_knows_the_rumor do
       IO.puts("My name is #{name}")
       node_to_rumor = Gossipstart.GossipHandler.get_node_to_rumor(name)
       IO.puts("Node to rumor: #{inspect node_to_rumor}")
@@ -26,7 +26,7 @@ defmodule Gossipstart.Node do
       GenServer.cast(node_to_rumor, {:rumor, content})
     end
 
-    new_state = [name, remaining_rumor_times - 1]
+    new_state = [name, 0]
     {:noreply, new_state}
   end
 

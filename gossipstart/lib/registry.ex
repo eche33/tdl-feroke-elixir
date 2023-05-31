@@ -33,6 +33,7 @@ defmodule Gossipstart.Registry do
     random_node = Enum.random(nodes)
     IO.puts("Random initial node: #{inspect random_node}")
 
+    Gossipstart.GossipHandler.reset_state()
     GenServer.cast(random_node, {:rumor, rumor})
 
     {:noreply, nodes}
