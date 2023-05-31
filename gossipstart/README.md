@@ -2,7 +2,8 @@
 
 # Correr código
 - iex -S mix
-- iex> Gossipstart.Registry.create(Gossipstart.Registry, "rumor")
+- iex> Gossipstart.Registry.create_gossip(4)
+- iex> Gossipstart.Registry.start_gossip("Hola")
 
 ## Installation
 
