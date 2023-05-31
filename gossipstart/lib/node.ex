@@ -25,7 +25,7 @@ defmodule Gossipstart.Node do
       # IO.puts("#{inspect self()}: total de nodos: #{total_nodes}")
       IO.puts("#{inspect self()}: Rumor recibido: #{content} de #{inspect from}")
       IO.puts("Todos tienen el rumor")
-      System.halt(0)
+      # System.halt(0)
       {:reply, :ok, state}
     end
 
@@ -40,25 +40,31 @@ defmodule Gossipstart.Node do
 
   @impl true
   def handle_cast({:rumor, content, total_nodes}, state) do
-    [node_to_rumor] = state
+    [name] = state
+
+    IO.puts("My name is #{name}")
+
+    node_to_rumor = Gossipstart.GossipHandler.get_node_to_rumor(name)
+    IO.puts("Node to rumor: #{inspect node_to_rumor}")
 
     if total_nodes == 0 do
       # IO.puts("#{inspect self()}: contador de rumor: #{rumor_sent?}")
       # IO.puts("#{inspect self()}: total de nodos: #{total_nodes}")
       IO.puts("#{inspect self()}: Rumor recibido: #{content}")
       IO.puts("Todos tienen el rumor")
-      System.halt(0)
-      {:noreply, state}
+      # System.halt(0)
+      # {:noreply, state}
     end
 
     if total_nodes > 0 do
       # IO.puts("#{inspect self()}: contador de rumor: #{rumor_sent?}")
       # IO.puts("#{inspect self()}: total de nodos: #{total_nodes}")
-      IO.puts "#{inspect self()}: Rumor recibido: #{content} "
-      node_alias = String.to_atom("Node#{node_to_rumor}")
-      GenServer.cast(node_alias, {:rumor, content, total_nodes - 1})
-      {:noreply, state}
+      IO.puts "#{inspect self()}: Rumor recibido: #{content}"
+      GenServer.cast(node_to_rumor, {:rumor, content, total_nodes - 1})
+      # {:noreply, state}
     end
+
+    {:noreply, state}
   end
 
   @impl true

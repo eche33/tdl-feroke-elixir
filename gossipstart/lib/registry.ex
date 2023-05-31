@@ -52,7 +52,7 @@ defmodule Gossipstart.Registry do
     random_node = Enum.random(nodes)
     IO.puts("Nodo random: #{inspect random_node}")
 
-    GenServer.call(random_node, {:rumor, rumor, length(nodes) - 1})
+    GenServer.cast(random_node, {:rumor, rumor, length(nodes) - 1})
 
     {:noreply, nodes}
   end
