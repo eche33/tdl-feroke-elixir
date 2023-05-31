@@ -7,36 +7,26 @@ defmodule Gossipstart.Node do
 
   @impl true
   def init([name]) do
-    {:ok, [name]}
+    {:ok, [name, 4]}
   end
 
   @impl true
-  def handle_cast({:rumor, content, total_nodes}, state) do
-    [name] = state
+  def handle_cast({:rumor, content}, state) do
+    [name, remaining_rumor_times] = state
 
     IO.puts("My name is #{name}")
 
     node_to_rumor = Gossipstart.GossipHandler.get_node_to_rumor(name)
     IO.puts("Node to rumor: #{inspect node_to_rumor}")
 
-    if total_nodes == 0 do
-      # IO.puts("#{inspect self()}: contador de rumor: #{rumor_sent?}")
-      # IO.puts("#{inspect self()}: total de nodos: #{total_nodes}")
-      IO.puts("#{inspect self()}: Rumor received: #{content}")
-      IO.puts("Everybody knows the rumor!")
-      # System.halt(0)
-      # {:noreply, state}
-    end
-
-    if total_nodes > 0 do
-      # IO.puts("#{inspect self()}: contador de rumor: #{rumor_sent?}")
-      # IO.puts("#{inspect self()}: total de nodos: #{total_nodes}")
+    if remaining_rumor_times > 0 do
       IO.puts "#{inspect self()}: Rumor received: #{content}"
-      GenServer.cast(node_to_rumor, {:rumor, content, total_nodes - 1})
-      # {:noreply, state}
+      Gossipstart.GossipHandler.notify_rumor_received(name)
+      GenServer.cast(node_to_rumor, {:rumor, content})
     end
 
-    {:noreply, state}
+    new_state = [name, remaining_rumor_times - 1]
+    {:noreply, new_state}
   end
 
   @impl true
