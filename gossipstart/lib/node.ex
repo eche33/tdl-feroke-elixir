@@ -7,12 +7,12 @@ defmodule Gossipstart.Node do
 
   @impl true
   def init([name]) do
-    {:ok, [name, 4]}
+    {:ok, [name]}
   end
 
   @impl true
   def handle_cast({:rumor, content}, state) do
-    [name, _] = state
+    [name] = state
 
     everybody_knows_the_rumor = Gossipstart.GossipHandler.everybody_knows_the_rumor?()
 
@@ -26,7 +26,7 @@ defmodule Gossipstart.Node do
       GenServer.cast(node_to_rumor, {:rumor, content})
     end
 
-    new_state = [name, 0]
+    new_state = [name]
     {:noreply, new_state}
   end
 
