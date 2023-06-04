@@ -34,6 +34,12 @@ defmodule Gossipstart.GossipHandler do
     end
   end
 
+  defp update_node_status(node_name, rumor_known) do
+    known_icon = if rumor_known, do: "●", else: "○"
+
+    IO.puts("#{known_icon} #{node_name} - Rumor Known: #{rumor_known}")
+  end
+
   @impl true
   def init(:ok) do
     nodes = []
@@ -81,6 +87,18 @@ defmodule Gossipstart.GossipHandler do
     [nodes, nodes_that_received_rumor, steps_taken] = state
 
     nodes_that_received_rumor = update_nodes_that_received_rumor(nodes_that_received_rumor, node)
+
+
+    nodes_that_dont_know_the_rumor = nodes -- nodes_that_received_rumor
+    Enum.each(nodes_that_dont_know_the_rumor, fn node ->
+      update_node_status(node, false)
+    end)
+
+
+    Enum.each(nodes_that_received_rumor, fn node ->
+      update_node_status(node, true)
+    end)
+
 
     if Enum.count(nodes_that_received_rumor) == Enum.count(nodes) do
       IO.puts("All nodes received the rumor")
