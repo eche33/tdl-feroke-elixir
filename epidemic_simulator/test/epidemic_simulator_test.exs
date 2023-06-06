@@ -1,8 +1,10 @@
 defmodule EpidemicSimulatorTest do
   use ExUnit.Case
-  doctest EpidemicSimulator
 
-  test "greets the world" do
-    assert EpidemicSimulator.hello() == :world
+  test "can create a population and simulate a virus" do
+    EpidemicSimulator.create_population(2, 2)
+    EpidemicSimulator.start_virus(:Adult1)
+    # cuanto pasa
+    assert EpidemicSimulator.amount_of_sick_people() == 3
   end
 end

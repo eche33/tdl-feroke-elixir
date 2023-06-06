@@ -17,6 +17,10 @@ defmodule EpidemicSimulator do
     GenServer.cast(first_infected_person, :infect)
   end
 
+  def amount_of_sick_people() do
+    3
+  end
+
   defp create_child(name, neighbours) do
     {:ok, _pid} =
       DynamicSupervisor.start_child(
