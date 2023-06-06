@@ -1,5 +1,6 @@
 defmodule Gossipstart.Registry do
   use GenServer
+  @me __MODULE__
 
   @doc """
   Starts the registry.
@@ -8,63 +9,48 @@ defmodule Gossipstart.Registry do
     GenServer.start_link(__MODULE__, :ok, opts)
   end
 
-  @doc """
-  Looks up the bucket pid for `name` stored in `server`.
-
-  Returns `{:ok, pid}` if the bucket exists, `:error` otherwise.
-  """
-  def lookup(server, name) do
-    GenServer.call(server, {:lookup, name})
+  def create_gossip(number_of_nodes) do
+    GenServer.call(@me, {:create_gossip, number_of_nodes})
   end
 
-  @doc """
-  Ensures there is a bucket associated with the given `name` in `server`.
-  """
-  def create(server, rumor) do
-    GenServer.call(server, {:create, rumor})
+  def start_gossip(rumor) do
+    GenServer.cast(@me, {:start_gossip, rumor})
+  end
+
+  defp create_node( name) do
+    {:ok, _pid} = DynamicSupervisor.start_child(Gossipstart.NodeSupervisor, {Gossipstart.Node, name})
   end
 
   ## Defining GenServer Callbacks
 
   @impl true
   def init(:ok) do
-    {:ok, %{}}
+    {:ok, []}
   end
 
   @impl true
-  def handle_call({:lookup, name}, _from, names) do
-    {:reply, Map.fetch(names, name), names}
-  end
+  def handle_cast({:start_gossip, rumor}, nodes) do
+    random_node = Enum.random(nodes)
+    IO.puts("Random initial node: #{inspect random_node}")
 
-  # @impl true
-  # def handle_cast({:create, name}, {names, refs}) do
-  #   if Map.has_key?(names, name) do
-  #     {:noreply, {names, refs}}
-  #   else
-  #     {:ok, pid} = DynamicSupervisor.start_child(KV.BucketSupervisor, KV.Bucket)
-  #     ref = Process.monitor(pid)
-  #     refs = Map.put(refs, ref, name)
-  #     names = Map.put(names, name, pid)
-  #     {:noreply, {names, refs}}
-  #   end
-  # end
+    Gossipstart.GossipHandler.reset_state()
+    GenServer.cast(random_node, {:rumor, rumor})
+
+    {:noreply, nodes}
+  end
 
   @impl true
-  def handle_call({:create, rumor}, _from, state) do
-    {:ok, node1} = GenServer.start_link(Gossipstart.Node, [2], name: :Node1)
-    IO.puts("Node1: #{inspect node1}")
-    {:ok, node2} = GenServer.start_link(Gossipstart.Node, [3], name: :Node2)
-    IO.puts("Node2: #{inspect node2}")
-    {:ok, node3} = GenServer.start_link(Gossipstart.Node, [4], name: :Node3)
-    IO.puts("Node3: #{inspect node3}")
-    {:ok, node4} = GenServer.start_link(Gossipstart.Node, [1], name: :Node4)
-    IO.puts("Node4: #{inspect node4}")
+  def handle_call({:create_gossip, number_of_nodes}, _from, _state) do
+    nodes_list = []
 
-    total_nodes = 4
-    GenServer.call(:Node1, {:rumor, rumor, total_nodes - 1})
-    {:reply, state}
+    nodes = Enum.reduce(1..number_of_nodes, nodes_list, fn(i, acc) ->
+      node_name = String.to_atom("Node#{i}")
+      create_node(node_name)
+      [node_name | acc]
+    end)
+
+    Gossipstart.GossipHandler.add_nodes(nodes)
+    {:reply, :ok, nodes}
   end
-
-
 
 end

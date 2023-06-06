@@ -1,52 +1,40 @@
 defmodule Gossipstart.Node do
   use GenServer
 
-  # def start_link(opts) do
-  #   GenServer.start_link(__MODULE__, node_number_to_rumor, opts)
-  # end
-
-  def send_message(node_from, node_to_call, message) do
-    GenServer.call(node_from, {:send_message, node_to_call, message})
+  def start_link(name) do
+    GenServer.start_link(__MODULE__, [name] , name: name)
   end
 
   @impl true
-  def init([node_number_to_rumor]) do
-    {:ok, [node_number_to_rumor]}
+  def init([name]) do
+    {:ok, [name]}
   end
 
   @impl true
-  def handle_call({:receive_message, content}, from, state) do
-    IO.puts "#{inspect self()}: Mensaje recibido: #{content} de #{inspect from}"
-    {:reply, :ok, state}
-  end
+  def handle_cast({:rumor, content}, state) do
+    [name] = state
 
-  @impl true
-  def handle_call({:send_message, node_to_call, content}, _from, state) do
-    IO.puts "#{inspect self()}: Mensaje enviado: #{content} a #{inspect node_to_call}"
-    GenServer.call(node_to_call, {:receive_message, content})
-    {:reply, :ok, state}
-  end
+    everybody_knows_the_rumor = Gossipstart.GossipHandler.everybody_knows_the_rumor?()
 
-  @impl true
-  def handle_call({:rumor, content, total_nodes}, from, state) do
-    [node_to_rumor] = state
+    if not everybody_knows_the_rumor do
+      IO.puts("My name is #{name}")
+      node_to_rumor = Gossipstart.GossipHandler.get_node_to_rumor(name)
+      # IO.puts("Node to rumor: #{inspect node_to_rumor}")
+      IO.puts "#{inspect self()}: Rumor received: #{content}"
 
-    if total_nodes == 0 do
-      # IO.puts("#{inspect self()}: contador de rumor: #{rumor_sent?}")
-      # IO.puts("#{inspect self()}: total de nodos: #{total_nodes}")
-      IO.puts("#{inspect self()}: Rumor recibido: #{content} de #{inspect from}")
-      IO.puts("Todos tienen el rumor")
-      {:no_reply, :ok, state}
+      Gossipstart.GossipHandler.notify_rumor_received(name)
+      GenServer.cast(node_to_rumor, {:rumor, content})
     end
 
-    if total_nodes > 0 do
-      # IO.puts("#{inspect self()}: contador de rumor: #{rumor_sent?}")
-      # IO.puts("#{inspect self()}: total de nodos: #{total_nodes}")
-      IO.puts "#{inspect self()}: Rumor recibido: #{content} de #{inspect from}"
-      node_alias = String.to_atom("Node#{node_to_rumor}")
-      GenServer.call(node_alias, {:rumor, content, total_nodes - 1})
-      {:reply, :ok, state}
-    end
+    new_state = [name]
+    {:noreply, new_state}
+  end
+
+  @impl true
+  def handle_info(msg, state) do
+    require Logger
+    Logger.debug("Unexpected message in Gossipstart.Registry: #{inspect(msg)}")
+    {:noreply, state}
   end
 
 end
