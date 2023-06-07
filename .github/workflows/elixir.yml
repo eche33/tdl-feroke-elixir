@@ -35,9 +35,9 @@ jobs:
         path: deps
         key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
         restore-keys: ${{ runner.os }}-mix-
-    - name: EpidemicSimulatorDirectory
-      run: cd epidemic_simulator
     - name: Install dependencies
+      working-directory: ./epidemic_simulator
       run: mix deps.get
     - name: Run tests
+      working-directory: ./epidemic_simulator
       run: mix test
