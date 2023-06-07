@@ -43,6 +43,13 @@ defmodule EpidemicSimulator do
       )
   end
 
+  defp update_health_status_map(population, health_status_map) do
+    Enum.reduce(population, health_status_map, fn person, acc ->
+      health_status = GenServer.call(person, :health_status)
+      Map.update(acc, health_status, 1, &(&1 + 1))
+    end)
+  end
+
   @impl true
   def init(:ok) do
     population = []
@@ -77,13 +84,6 @@ defmodule EpidemicSimulator do
     end)
 
     {:reply, :ok, population}
-  end
-
-  defp update_health_status_map(population, health_status_map) do
-    Enum.reduce(population, health_status_map, fn person, acc ->
-      health_status = GenServer.call(person, :health_status)
-      Map.update(acc, health_status, 1, &(&1 + 1))
-    end)
   end
 
   @impl true
