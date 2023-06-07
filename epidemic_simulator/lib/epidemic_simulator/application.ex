@@ -10,7 +10,8 @@ defmodule EpidemicSimulator.Application do
     children = [
       # Starts a worker by calling: EpidemicSimulator.Worker.start_link(arg)
       # {EpidemicSimulator.Worker, arg}
-      {DynamicSupervisor, name: EpidemicSimulator.ActorSupervisor, strategy: :one_for_one}
+      {EpidemicSimulator, name: EpidemicSimulator},
+      {DynamicSupervisor, name: EpidemicSimulator.PopulationSupervisor, strategy: :one_for_one}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
