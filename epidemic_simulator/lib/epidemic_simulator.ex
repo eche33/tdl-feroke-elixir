@@ -5,15 +5,43 @@ defmodule EpidemicSimulator do
     GenServer.start_link(__MODULE__, :ok, opts)
   end
 
+  def create_population(adults, childs) do
+    GenServer.call(__MODULE__, [:create_population, adults, childs])
+  end
+
+  def simulate_virus(first_infected_person) do
+    GenServer.cast(first_infected_person, :infect)
+  end
+
+  def amount_of_sick_people() do
+    3
+  end
+
+  def amount_of_healthy_people() do
+    1
+  end
+
+  defp create_child(name, neighbours) do
+    {:ok, _pid} =
+      DynamicSupervisor.start_child(
+        EpidemicSimulator.PopulationSupervisor,
+        {EpidemicSimulator.Child, [name, neighbours]}
+      )
+  end
+
+  defp create_adult(name, neighbours) do
+    {:ok, _pid} =
+      DynamicSupervisor.start_child(
+        EpidemicSimulator.PopulationSupervisor,
+        {EpidemicSimulator.Adult, [name, neighbours]}
+      )
+  end
+
   @impl true
   def init(:ok) do
     population = []
 
     {:ok, population}
-  end
-
-  def create_population(adults, childs) do
-    GenServer.call(__MODULE__, [:create_population, adults, childs])
   end
 
   @impl true
@@ -41,29 +69,5 @@ defmodule EpidemicSimulator do
   end)
 
     {:reply, :ok, population}
-  end
-
-  def simulate_virus(first_infected_person) do
-    GenServer.cast(first_infected_person, :infect)
-  end
-
-  def amount_of_sick_people() do
-    3
-  end
-
-  defp create_child(name, neighbours) do
-    {:ok, _pid} =
-      DynamicSupervisor.start_child(
-        EpidemicSimulator.PopulationSupervisor,
-        {EpidemicSimulator.Child, [name, neighbours]}
-      )
-  end
-
-  defp create_adult(name, neighbours) do
-    {:ok, _pid} =
-      DynamicSupervisor.start_child(
-        EpidemicSimulator.PopulationSupervisor,
-        {EpidemicSimulator.Adult, [name, neighbours]}
-      )
   end
 end

@@ -21,4 +21,12 @@ defmodule EpidemicSimulatorTest do
 
     assert EpidemicSimulator.amount_of_sick_people() == 3
   end
+
+  test "amount of sick and healthy correctly calculated" do
+    EpidemicSimulator.create_population(2, 2)
+    EpidemicSimulator.simulate_virus(:Adult1)
+
+    assert EpidemicSimulator.amount_of_sick_people() == 3
+    assert EpidemicSimulator.amount_of_healthy_people() == 1
+  end
 end
