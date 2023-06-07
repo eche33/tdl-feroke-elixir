@@ -23,8 +23,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: EpidemicSimulatorDirectory
-      run: cd epidemic_simulator
     - uses: actions/checkout@v3
     - name: Set up Elixir
       uses: erlef/setup-beam@988e02bfe678367a02564f65ca2e37726dc0268f
@@ -37,6 +35,8 @@ jobs:
         path: deps
         key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
         restore-keys: ${{ runner.os }}-mix-
+    - name: EpidemicSimulatorDirectory
+      run: cd epidemic_simulator
     - name: Install dependencies
       run: mix deps.get
     - name: Run tests
