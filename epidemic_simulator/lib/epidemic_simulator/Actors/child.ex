@@ -6,26 +6,6 @@ defmodule EpidemicSimulator.Child do
   end
 
   @impl true
-  def handle_cast(:infect, state) do
-    [name, neighbours, health_status] = state
-    [first_neighbour | _] = neighbours
-
-    new_health_status = case health_status do
-      :healthy ->
-        IO.puts("#{name}: me enferme :(")
-        GenServer.cast(first_neighbour, :infect)
-
-        :sick
-      :sick ->
-        IO.puts("#{name}: andapalla")
-
-        :sick
-    end
-
-    {:noreply, [name, neighbours, new_health_status]}
-  end
-
-  @impl true
   def init([name, neighbours]) do
     neighbours_without_me = List.delete(neighbours, name)
     IO.puts("I'm #{inspect(name)}")
@@ -33,4 +13,33 @@ defmodule EpidemicSimulator.Child do
 
     {:ok, [name, neighbours_without_me, :healthy]}
   end
+
+  @impl true
+  def handle_cast(:infect, state) do
+    [name, neighbours, health_status] = state
+    [first_neighbour | _] = neighbours
+
+    new_health_status =
+      case health_status do
+        :healthy ->
+          IO.puts("#{name}: me enferme :(")
+          GenServer.cast(first_neighbour, :infect)
+
+          :sick
+
+        :sick ->
+          IO.puts("#{name}: andapalla")
+
+          :sick
+      end
+
+    {:noreply, [name, neighbours, new_health_status]}
+  end
+
+  @impl true
+  def handle_call(:health_status, _from, state) do
+    [_, _, health_status] = state
+    {:reply, health_status, state}
+  end
+
 end
