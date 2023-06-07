@@ -1,19 +1,39 @@
 defmodule EpidemicSimulator do
-  def create_population(adults, children) do
-    all_persons = [:Child1, :Child2, :Adult1, :Adult2]
+  use GenServer
 
+  def start_link() do
+    GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
+  end
+
+  @impl true
+  def init(:ok) do
+    population = []
+
+    {:ok, population}
+  end
+
+  def create_population(adults, childs) do
+    GenServer.call(__MODULE__, [:create_population, adults, childs])
+  end
+
+  @impl true
+  def handle_call([:create_population, adults, children], _from, _state) do
     # For each child, create a child actor
-    Enum.each(1..children, fn i ->
-      create_child(String.to_atom("Child#{i}"), all_persons)
+    childs = Enum.map(1..children, fn i ->
+         String.to_atom("Child#{i}")
     end)
 
     # For each adult, create an adult actor
-    Enum.each(1..adults, fn i ->
-      create_adult(String.to_atom("Adult#{i}"), all_persons)
+    adults = Enum.map(1..adults, fn i ->
+        String.to_atom("Adult#{i}")
     end)
+
+    IO.puts("#{inspect (childs++adults)}")
+
+    {:reply, :ok, []}
   end
 
-  def start_virus(first_infected_person) do
+  def simulate_virus(first_infected_person) do
     GenServer.cast(first_infected_person, :infect)
   end
 
