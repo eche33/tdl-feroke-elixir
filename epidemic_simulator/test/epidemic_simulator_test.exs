@@ -1,6 +1,13 @@
 defmodule EpidemicSimulatorTest do
   use ExUnit.Case
 
+  setup do
+    #This runs before each test. We are making sure that each child and adult is deleted when the test finishes
+    Supervisor.terminate_child(EpidemicSimulator.Supervisor, EpidemicSimulator.PopulationSupervisor)
+    Supervisor.restart_child(EpidemicSimulator.Supervisor, EpidemicSimulator.PopulationSupervisor)
+    :ok
+  end
+
   test "can create a population and simulate a virus" do
     EpidemicSimulator.create_population(2, 2)
     EpidemicSimulator.simulate_virus(:Adult1)
