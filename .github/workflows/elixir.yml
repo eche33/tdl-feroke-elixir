@@ -24,7 +24,7 @@ jobs:
 
     steps:
     - name: EpidemicSimulatorDirectory
-      run: cd EpidemicSimulator
+      run: cd epidemic_simulator
     - uses: actions/checkout@v3
     - name: Set up Elixir
       uses: erlef/setup-beam@988e02bfe678367a02564f65ca2e37726dc0268f
