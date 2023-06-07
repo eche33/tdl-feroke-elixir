@@ -12,12 +12,12 @@ defmodule EpidemicSimulator.Adult do
 
     new_health_status = case health_status do
       :healthy ->
-        IO.puts("Me enferme :( soy #{name}")
+        IO.puts("#{name}: me enferme :(")
         GenServer.cast(first_neighbour, :infect)
 
         :sick
       :sick ->
-        IO.puts("andapalla soy #{name}")
+        IO.puts("#{name}: andapalla")
 
         :sick
     end
@@ -28,8 +28,8 @@ defmodule EpidemicSimulator.Adult do
   @impl true
   def init([name, neighbours]) do
     neighbours_without_me = List.delete(neighbours, name)
-    IO.puts("#{inspect(name)}")
-    IO.puts("#{inspect(neighbours_without_me)}")
+    IO.puts("I'm #{inspect(name)}")
+    IO.puts("#{name}: my neighnours are #{inspect(neighbours_without_me)}")
 
     {:ok, [name, neighbours_without_me, :healthy]}
   end

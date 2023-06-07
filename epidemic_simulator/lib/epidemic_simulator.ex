@@ -18,19 +18,29 @@ defmodule EpidemicSimulator do
 
   @impl true
   def handle_call([:create_population, adults, children], _from, _state) do
-    # For each child, create a child actor
     childs = Enum.map(1..children, fn i ->
          String.to_atom("Child#{i}")
     end)
 
-    # For each adult, create an adult actor
     adults = Enum.map(1..adults, fn i ->
         String.to_atom("Adult#{i}")
     end)
 
-    IO.puts("#{inspect (childs++adults)}")
+    population = childs ++ adults
 
-    {:reply, :ok, []}
+    IO.puts("Population: #{inspect (population)}")
+
+    # For each child, create a child actor
+    Enum.each(childs, fn child ->
+        create_child(child, population)
+    end)
+
+    # For each adult, create a adult actor
+    Enum.each(adults, fn adult ->
+      create_adult(adult, population)
+  end)
+
+    {:reply, :ok, population}
   end
 
   def simulate_virus(first_infected_person) do
@@ -44,7 +54,7 @@ defmodule EpidemicSimulator do
   defp create_child(name, neighbours) do
     {:ok, _pid} =
       DynamicSupervisor.start_child(
-        EpidemicSimulator.ActorSupervisor,
+        EpidemicSimulator.PopulationSupervisor,
         {EpidemicSimulator.Child, [name, neighbours]}
       )
   end
@@ -52,7 +62,7 @@ defmodule EpidemicSimulator do
   defp create_adult(name, neighbours) do
     {:ok, _pid} =
       DynamicSupervisor.start_child(
-        EpidemicSimulator.ActorSupervisor,
+        EpidemicSimulator.PopulationSupervisor,
         {EpidemicSimulator.Adult, [name, neighbours]}
       )
   end
