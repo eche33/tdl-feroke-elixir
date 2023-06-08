@@ -1,6 +1,8 @@
 defmodule EpidemicSimulator do
   use GenServer
 
+  defstruct [:population]
+
   @me __MODULE__
 
   def start_link(opts) do
@@ -52,13 +54,13 @@ defmodule EpidemicSimulator do
 
   @impl true
   def init(:ok) do
-    population = []
+    initial_state = %@me{population: []}
 
-    {:ok, population}
+    {:ok, initial_state}
   end
 
   @impl true
-  def handle_call([:create_population, adults, children], _from, _state) do
+  def handle_call([:create_population, adults, children], _from, state) do
     childs =
       Enum.map(1..children, fn i ->
         String.to_atom("Child#{i}")
@@ -83,12 +85,13 @@ defmodule EpidemicSimulator do
       create_adult(adult, population)
     end)
 
-    {:reply, :ok, population}
+    new_state = %{state | population: population}
+    {:reply, :ok, new_state}
   end
 
   @impl true
   def handle_call(:population_health_status, _from, state) do
-    population = state
+    population = state.population
 
     health_status_map = %{}
 
