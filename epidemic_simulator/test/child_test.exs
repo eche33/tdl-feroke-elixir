@@ -19,5 +19,4 @@ defmodule ChildTest do
 
     assert GenServer.call(pid, :is_healthy)
   end
-
 end

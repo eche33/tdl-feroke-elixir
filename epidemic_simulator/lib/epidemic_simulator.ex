@@ -25,6 +25,10 @@ defmodule EpidemicSimulator do
     GenServer.call(@me, :amount_of_healthy_people)
   end
 
+  def stop_simulation() do
+    GenServer.cast(@me, :stop_simulation)
+  end
+
   # private
 
   defp create_child(name, neighbours) do
@@ -76,24 +80,39 @@ defmodule EpidemicSimulator do
       create_adult(adult, population)
     end)
 
-    new_state = %{state | population: population, population_health_status: %{:healthy => length(population)}}
+    new_state = %{
+      state
+      | population: population,
+        population_health_status: %{:healthy => length(population)}
+    }
+
     {:reply, :ok, new_state}
   end
 
   def handle_call(:amount_of_sick_people, _, state) do
-    result = Enum.count(state.population, fn (person) ->
-      GenServer.call(person, :is_sick)
-    end)
+    result =
+      Enum.count(state.population, fn person ->
+        GenServer.call(person, :is_sick)
+      end)
 
     {:reply, result, state}
   end
 
   def handle_call(:amount_of_healthy_people, _, state) do
-    result = Enum.count(state.population, fn (person) ->
-      GenServer.call(person, :is_healthy)
-    end)
+    result =
+      Enum.count(state.population, fn person ->
+        GenServer.call(person, :is_healthy)
+      end)
 
     {:reply, result, state}
+  end
+
+  def handle_cast(:stop_simulation, state) do
+    Enum.each(state.population, fn person ->
+      GenServer.cast(person, :stop_simulating)
+    end)
+
+    {:noreply, state}
   end
 
   @impl true

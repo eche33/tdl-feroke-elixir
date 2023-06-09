@@ -16,8 +16,9 @@ defmodule EpidemicSimulatorTest do
     EpidemicSimulator.create_population(2, 2)
     EpidemicSimulator.simulate_virus(:Adult1)
 
-    #If we don't use the sleep we ask for the amount of sick people before the virus has time to spread
+    # If we don't use the sleep we ask for the amount of sick people before the virus has time to spread
     :timer.sleep(:timer.seconds(2))
+    EpidemicSimulator.stop_simulation()
 
     assert EpidemicSimulator.amount_of_sick_people() == 4
     assert EpidemicSimulator.amount_of_healthy_people() == 0
@@ -28,6 +29,7 @@ defmodule EpidemicSimulatorTest do
     EpidemicSimulator.simulate_virus(:Adult1)
 
     :timer.sleep(:timer.seconds(1))
+    EpidemicSimulator.stop_simulation()
 
     assert EpidemicSimulator.amount_of_sick_people() == 20
     assert EpidemicSimulator.amount_of_healthy_people() == 0

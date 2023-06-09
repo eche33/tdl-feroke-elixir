@@ -19,5 +19,4 @@ defmodule AdultTest do
 
     assert GenServer.call(pid, :is_healthy)
   end
-
 end
