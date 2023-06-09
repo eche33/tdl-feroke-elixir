@@ -106,11 +106,11 @@ defmodule EpidemicSimulator do
   end
 
   @impl true
-  def handle_cast({:notify_health_change, health_status}, state) do
+  def handle_cast({:notify_health_change, health_status, previous_health_status}, state) do
     population_health_status = state.population_health_status
 
     temp_map = Map.update(population_health_status, health_status, 1, &(&1 + 1))
-    new_population_health_status = Map.update(temp_map, :healthy, 1, &(&1 - 1))
+    new_population_health_status = Map.update(temp_map, previous_health_status, 1, &(&1 - 1))
 
     new_state = %{state | population_health_status: new_population_health_status}
 

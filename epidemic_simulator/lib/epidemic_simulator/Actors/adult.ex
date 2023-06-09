@@ -24,13 +24,15 @@ defmodule EpidemicSimulator.Adult do
   @impl true
   def handle_cast(:infect, state) do
 
+    previous_health_status = state.health_status
+
     new_health_status =
       case state.health_status do
         :healthy ->
           IO.puts("#{state.name}: me enferme :(")
 
           new_health = :sick
-          GenServer.cast(EpidemicSimulator, {:notify_health_change, new_health})
+          GenServer.cast(EpidemicSimulator, {:notify_health_change, new_health, previous_health_status})
 
           new_health
 
