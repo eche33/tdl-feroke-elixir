@@ -17,9 +17,7 @@ defmodule ChildTest do
 
     assert {:ok, pid} = GenServer.start_link(EpidemicSimulator.Child, [name, []])
 
-    status = GenServer.call(pid, :health_status)
-
-    assert status == :healthy
+    assert GenServer.call(pid, :is_healthy)
   end
 
 end

@@ -17,9 +17,7 @@ defmodule AdultTest do
 
     assert {:ok, pid} = GenServer.start_link(EpidemicSimulator.Adult, [name, []])
 
-    status = GenServer.call(pid, :health_status)
-
-    assert status == :healthy
+    assert GenServer.call(pid, :is_healthy)
   end
 
 end
