@@ -18,17 +18,27 @@ defmodule EpidemicSimulator do
   end
 
   def amount_of_sick_people() do
-    result = GenServer.call(@me, :population_health_status)
+    GenServer.call(@me, :amount_of_sick_people)
+  end
 
-    {:ok, amount} = Map.fetch(result, :sick)
-    amount
+  def handle_call(:amount_of_sick_people, _, state) do
+    result = Enum.count(state.population, fn (person) ->
+      GenServer.call(person, :is_sick)
+    end)
+
+    {:reply, result, state}
   end
 
   def amount_of_healthy_people() do
-    result = GenServer.call(@me, :population_health_status)
+    GenServer.call(@me, :amount_of_healthy_people)
+  end
 
-    {:ok, amount} = Map.fetch(result, :healthy)
-    amount
+  def handle_call(:amount_of_healthy_people, _, state) do
+    result = Enum.count(state.population, fn (person) ->
+      GenServer.call(person, :is_healthy)
+    end)
+
+    {:reply, result, state}
   end
 
   defp create_child(name, neighbours) do

@@ -17,7 +17,7 @@ defmodule EpidemicSimulatorTest do
     EpidemicSimulator.simulate_virus(:Adult1)
 
     #If we don't use the sleep we ask for the amount of sick people before the virus has time to spread
-    :timer.sleep(:timer.seconds(1))
+    :timer.sleep(:timer.seconds(2))
 
     assert EpidemicSimulator.amount_of_sick_people() == 4
     assert EpidemicSimulator.amount_of_healthy_people() == 0

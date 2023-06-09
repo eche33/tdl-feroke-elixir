@@ -22,6 +22,16 @@ defmodule EpidemicSimulator.Child do
   end
 
   @impl true
+  def handle_call(:is_sick, _, state) do
+    {:reply, state.health_status == :sick, state}
+  end
+
+  @impl true
+  def handle_call(:is_healthy, _, state) do
+    {:reply, state.health_status == :healthy, state}
+  end
+
+  @impl true
   def handle_cast(:infect, state) do
 
     previous_health_status = state.health_status
@@ -31,21 +41,15 @@ defmodule EpidemicSimulator.Child do
         :healthy ->
           IO.puts("#{state.name}: me enferme :(")
 
-          new_health = :sick
-          GenServer.cast(EpidemicSimulator, {:notify_health_change, new_health, previous_health_status})
-
-          new_health
-
+          :sick
         :sick ->
           #IO.puts("#{state.name}: andapalla")
 
           :sick
       end
 
-    if GenServer.call(EpidemicSimulator, :simulation_running?) do
-      neighbout_to_infect = Enum.random(state.neighbours)
-      GenServer.cast(neighbout_to_infect, :infect)
-    end
+    neighbout_to_infect = Enum.random(state.neighbours)
+    GenServer.cast(neighbout_to_infect, :infect)
 
     new_state = %{state | health_status: new_health_status}
     {:noreply, new_state}
