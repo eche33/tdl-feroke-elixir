@@ -21,25 +21,11 @@ defmodule EpidemicSimulator do
     GenServer.call(@me, :amount_of_sick_people)
   end
 
-  def handle_call(:amount_of_sick_people, _, state) do
-    result = Enum.count(state.population, fn (person) ->
-      GenServer.call(person, :is_sick)
-    end)
-
-    {:reply, result, state}
-  end
-
   def amount_of_healthy_people() do
     GenServer.call(@me, :amount_of_healthy_people)
   end
 
-  def handle_call(:amount_of_healthy_people, _, state) do
-    result = Enum.count(state.population, fn (person) ->
-      GenServer.call(person, :is_healthy)
-    end)
-
-    {:reply, result, state}
-  end
+  # private
 
   defp create_child(name, neighbours) do
     {:ok, _pid} =
@@ -94,9 +80,20 @@ defmodule EpidemicSimulator do
     {:reply, :ok, new_state}
   end
 
-  @impl true
-  def handle_call(:population_health_status, _from, state) do
-    {:reply, state.population_health_status, state}
+  def handle_call(:amount_of_sick_people, _, state) do
+    result = Enum.count(state.population, fn (person) ->
+      GenServer.call(person, :is_sick)
+    end)
+
+    {:reply, result, state}
+  end
+
+  def handle_call(:amount_of_healthy_people, _, state) do
+    result = Enum.count(state.population, fn (person) ->
+      GenServer.call(person, :is_healthy)
+    end)
+
+    {:reply, result, state}
   end
 
   @impl true
@@ -107,17 +104,4 @@ defmodule EpidemicSimulator do
 
     {:reply, response, state}
   end
-
-  @impl true
-  def handle_cast({:notify_health_change, health_status, previous_health_status}, state) do
-    population_health_status = state.population_health_status
-
-    temp_map = Map.update(population_health_status, health_status, 1, &(&1 + 1))
-    new_population_health_status = Map.update(temp_map, previous_health_status, 1, &(&1 - 1))
-
-    new_state = %{state | population_health_status: new_population_health_status}
-
-    {:noreply, new_state}
-  end
-
 end
