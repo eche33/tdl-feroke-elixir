@@ -24,21 +24,26 @@ defmodule EpidemicSimulator.Child do
   @impl true
   def handle_cast(:infect, state) do
 
-    [first_neighbour | _] = state.neighbours
-
     new_health_status =
       case state.health_status do
         :healthy ->
           IO.puts("#{state.name}: me enferme :(")
-          GenServer.cast(first_neighbour, :infect)
 
-          :sick
+          new_health = :sick
+          GenServer.cast(EpidemicSimulator, {:notify_health_change, new_health})
+
+          new_health
 
         :sick ->
-          IO.puts("#{state.name}: andapalla")
+          #IO.puts("#{state.name}: andapalla")
 
           :sick
       end
+
+    if GenServer.call(EpidemicSimulator, :simulation_running?) do
+      neighbout_to_infect = Enum.random(state.neighbours)
+      GenServer.cast(neighbout_to_infect, :infect)
+    end
 
     new_state = %{state | health_status: new_health_status}
     {:noreply, new_state}

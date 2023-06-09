@@ -1,7 +1,7 @@
 defmodule EpidemicSimulator do
   use GenServer
 
-  defstruct [:population]
+  defstruct [:population, :population_health_status]
 
   @me __MODULE__
 
@@ -18,12 +18,14 @@ defmodule EpidemicSimulator do
   end
 
   def amount_of_sick_people() do
-    3
+    result = GenServer.call(@me, :population_health_status)
+
+    {:ok, amount} = Map.fetch(result, :sick)
+    amount
   end
 
   def amount_of_healthy_people() do
     result = GenServer.call(@me, :population_health_status)
-
 
     {:ok, amount} = Map.fetch(result, :healthy)
     amount
@@ -54,7 +56,7 @@ defmodule EpidemicSimulator do
 
   @impl true
   def init(:ok) do
-    initial_state = %@me{population: []}
+    initial_state = %@me{population: [], population_health_status: %{}}
 
     {:ok, initial_state}
   end
@@ -85,19 +87,34 @@ defmodule EpidemicSimulator do
       create_adult(adult, population)
     end)
 
-    new_state = %{state | population: population}
+    new_state = %{state | population: population, population_health_status: %{:healthy => length(population)}}
     {:reply, :ok, new_state}
   end
 
   @impl true
   def handle_call(:population_health_status, _from, state) do
-    population = state.population
+    {:reply, state.population_health_status, state}
+  end
 
-    health_status_map = %{}
+  @impl true
+  def handle_call(:simulation_running?, _from, state) do
+    sick_people = state.population_health_status[:sick]
 
-    new_health_status_map = update_health_status_map(population, health_status_map)
+    response = sick_people != length(state.population)
 
-    {:reply, new_health_status_map, state}
+    {:reply, response, state}
+  end
+
+  @impl true
+  def handle_cast({:notify_health_change, health_status}, state) do
+    population_health_status = state.population_health_status
+
+    temp_map = Map.update(population_health_status, health_status, 1, &(&1 + 1))
+    new_population_health_status = Map.update(temp_map, :healthy, 1, &(&1 - 1))
+
+    new_state = %{state | population_health_status: new_population_health_status}
+
+    {:noreply, new_state}
   end
 
 end
