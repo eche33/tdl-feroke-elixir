@@ -1,0 +1,4 @@
+- pasar las responsabilidades al simulator -> LISTO
+- sacar el codigo repetido entre el child y el adult
+- que solo se mande el mensaje de infect una vez para que tenga sentido la simulación
+- pensar la condicion de corte -> POR AHORA MANUAL
