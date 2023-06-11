@@ -14,7 +14,7 @@ defmodule EpidemicSimulator do
   end
 
   def simulate_virus(first_infected_person) do
-    GenServer.cast(first_infected_person, :infect)
+    GenServer.cast(@me, [:simulate_virus, first_infected_person])
   end
 
   def amount_of_sick_people() do
@@ -89,6 +89,7 @@ defmodule EpidemicSimulator do
     {:reply, :ok, new_state}
   end
 
+  @impl true
   def handle_call(:amount_of_sick_people, _, state) do
     result =
       Enum.count(state.population, fn person ->
@@ -98,6 +99,7 @@ defmodule EpidemicSimulator do
     {:reply, result, state}
   end
 
+  @impl true
   def handle_call(:amount_of_healthy_people, _, state) do
     result =
       Enum.count(state.population, fn person ->
@@ -105,6 +107,15 @@ defmodule EpidemicSimulator do
       end)
 
     {:reply, result, state}
+  end
+
+  @impl true
+  def handle_call(:simulation_running?, _from, state) do
+    sick_people = state.population_health_status[:sick]
+
+    response = sick_people != length(state.population)
+
+    {:reply, response, state}
   end
 
   def handle_cast(:stop_simulation, state) do
@@ -116,11 +127,11 @@ defmodule EpidemicSimulator do
   end
 
   @impl true
-  def handle_call(:simulation_running?, _from, state) do
-    sick_people = state.population_health_status[:sick]
+  def handle_cast([:simulate_virus, first_infected_person], state) do
+    GenServer.cast(first_infected_person, :infect)
 
-    response = sick_people != length(state.population)
-
-    {:reply, response, state}
+    {:noreply, state}
   end
+
+
 end
