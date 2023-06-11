@@ -15,7 +15,7 @@ defmodule EpidemicSimulator.Adult do
       name: name,
       neighbours: neighbours_without_me,
       health_status: :healthy,
-      contagion_resistance: 0,
+      contagion_resistance: 0.3,
       simulation_running: true
     }
 
@@ -37,15 +37,21 @@ defmodule EpidemicSimulator.Adult do
     new_health_status =
       case state.health_status do
         :healthy ->
-          IO.puts("#{state.name}: me enferme :(")
+          if (EpidemicSimulator.Helpers.ContagionHelper.get_sick?(state)) do
+            IO.puts("#{state.name}: me enferme :(")
 
-          :sick
+            :sick
+          else
+            IO.puts("#{state.name}: Zafé, no me contagié")
+            :healthy
+          end
+
 
         :sick ->
           :sick
       end
 
-    if state.simulation_running do
+    if state.simulation_running and new_health_status == :sick do
       neighbour_to_infect = Enum.random(state.neighbours)
       GenServer.cast(neighbour_to_infect, :infect)
     end
