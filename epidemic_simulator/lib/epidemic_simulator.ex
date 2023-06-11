@@ -1,7 +1,7 @@
 defmodule EpidemicSimulator do
   use GenServer
 
-  defstruct [:population, :population_health_status]
+  defstruct [:population, :population_health_status, :simulation_start_datetime]
 
   @me __MODULE__
 
@@ -123,6 +123,9 @@ defmodule EpidemicSimulator do
       GenServer.cast(person, :stop_simulating)
     end)
 
+    simulation_time = DateTime.diff(DateTime.utc_now(), state.simulation_start_datetime)
+    IO.puts("Simulation time: #{inspect(simulation_time)}")
+
     {:noreply, state}
   end
 
@@ -130,7 +133,12 @@ defmodule EpidemicSimulator do
   def handle_cast([:simulate_virus, first_infected_person], state) do
     GenServer.cast(first_infected_person, :infect)
 
-    {:noreply, state}
+    new_state = %{
+      state
+      | simulation_start_datetime: DateTime.utc_now()
+    }
+
+    {:noreply, new_state}
   end
 
 
