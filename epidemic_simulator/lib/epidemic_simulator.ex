@@ -1,7 +1,7 @@
 defmodule EpidemicSimulator do
   use GenServer
 
-  defstruct [:population, :population_health_status, :simulation_start_datetime]
+  defstruct [:population, :population_health_status, :virus, :simulation_start_datetime]
 
   @me __MODULE__
 
@@ -11,6 +11,10 @@ defmodule EpidemicSimulator do
 
   def create_population(adults, childs) do
     GenServer.call(@me, [:create_population, adults, childs])
+  end
+
+  def create_virus(virality) do
+    GenServer.call(@me, [:create_virus, virality])
   end
 
   def simulate_virus(first_infected_person) do
@@ -118,6 +122,23 @@ defmodule EpidemicSimulator do
     {:reply, response, state}
   end
 
+  @impl true
+  def handle_call([:create_virus, virality], _from, state) do
+    virus = %EpidemicSimulator.Structs.VirusInformation{
+      virality: virality,
+      incubation_time: 2,
+      lethality: 0.1,
+      sick_time: 5
+    }
+
+    new_state = %{
+      state
+      | virus: virus
+    }
+
+    {:reply, :ok, new_state}
+  end
+
   def handle_cast(:stop_simulation, state) do
     Enum.each(state.population, fn person ->
       GenServer.cast(person, :stop_simulating)
@@ -131,7 +152,7 @@ defmodule EpidemicSimulator do
 
   @impl true
   def handle_cast([:simulate_virus, first_infected_person], state) do
-    GenServer.cast(first_infected_person, :infect)
+    GenServer.cast(first_infected_person, {:infect, state.virus})
 
     new_state = %{
       state
