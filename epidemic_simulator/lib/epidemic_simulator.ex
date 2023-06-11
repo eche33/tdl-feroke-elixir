@@ -18,6 +18,17 @@ defmodule EpidemicSimulator do
   end
 
   def simulate_virus(first_infected_person) do
+    population = GenServer.call(@me, :population)
+    virus = GenServer.call(@me, :virus)
+
+    if virus == nil do
+      raise "You need to create a virus first"
+    end
+
+    if population == [] do
+      raise "You need to create a population first"
+    end
+
     GenServer.cast(@me, [:simulate_virus, first_infected_person])
   end
 
@@ -53,9 +64,19 @@ defmodule EpidemicSimulator do
 
   @impl true
   def init(:ok) do
-    initial_state = %@me{population: [], population_health_status: %{}}
+    initial_state = %@me{population: [], population_health_status: %{}, virus: nil}
 
     {:ok, initial_state}
+  end
+
+  @impl true
+  def handle_call(:population, _, state) do
+    {:reply, state.population, state}
+  end
+
+  @impl true
+  def handle_call(:virus, _, state) do
+    {:reply, state.virus, state}
   end
 
   @impl true
