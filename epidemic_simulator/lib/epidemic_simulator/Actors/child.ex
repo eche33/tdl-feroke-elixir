@@ -15,8 +15,9 @@ defmodule EpidemicSimulator.Child do
       name: name,
       neighbours: neighbours_without_me,
       health_status: :healthy,
-      contagion_resistance: 0.3,
-      simulation_running: true
+      contagion_resistance: 0.1,
+      simulation_running: true,
+      virus: nil
     }
 
     {:ok, initial_state}
@@ -52,13 +53,14 @@ defmodule EpidemicSimulator.Child do
       end
 
     if state.simulation_running and new_health_status == :sick do
+      :timer.sleep(:timer.seconds(1))
       Enum.each(1..virus.virality, fn _ ->
         neighbour_to_infect = Enum.random(state.neighbours)
         GenServer.cast(neighbour_to_infect, {:infect, virus})
       end)
     end
 
-    new_state = %{state | health_status: new_health_status}
+    new_state = %{state | health_status: new_health_status, virus: virus}
     {:noreply, new_state}
   end
 
@@ -66,4 +68,19 @@ defmodule EpidemicSimulator.Child do
     new_state = %{state | simulation_running: false}
     {:noreply, new_state}
   end
+
+  def handle_cast(:start_simulating, state) do
+    new_state = %{state | simulation_running: true}
+
+    if new_state.health_status == :sick do
+      :timer.sleep(:timer.seconds(1))
+      Enum.each(1..state.virus.virality, fn _ ->
+        neighbour_to_infect = Enum.random(state.neighbours)
+        GenServer.cast(neighbour_to_infect, {:infect, state.virus})
+      end)
+    end
+
+    {:noreply, new_state}
+  end
+
 end

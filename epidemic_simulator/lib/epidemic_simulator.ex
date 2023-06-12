@@ -186,6 +186,10 @@ defmodule EpidemicSimulator do
 
   @impl true
   def handle_cast({:simulate_virus, time}, state) do
+    Enum.each(state.population, fn person ->
+      GenServer.cast(person, :start_simulating)
+    end)
+
     GenServer.cast(EpidemicSimulator.Timer, {:start, time})
 
     first_infected_person = Enum.random(state.population)
