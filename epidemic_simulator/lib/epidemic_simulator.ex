@@ -17,7 +17,7 @@ defmodule EpidemicSimulator do
     GenServer.call(@me, [:create_virus, virality])
   end
 
-  def simulate_virus() do
+  def simulate_virus(time) do
     population = GenServer.call(@me, :population)
     virus = GenServer.call(@me, :virus)
 
@@ -29,7 +29,7 @@ defmodule EpidemicSimulator do
       raise "You need to create a population first"
     end
 
-    GenServer.cast(@me, :simulate_virus)
+    GenServer.cast(@me, {:simulate_virus, time})
   end
 
   def amount_of_sick_people() do
@@ -160,6 +160,7 @@ defmodule EpidemicSimulator do
     {:reply, :ok, new_state}
   end
 
+  @impl true
   def handle_cast(:stop_simulation, state) do
     Enum.each(state.population, fn person ->
       GenServer.cast(person, :stop_simulating)
@@ -172,7 +173,21 @@ defmodule EpidemicSimulator do
   end
 
   @impl true
-  def handle_cast(:simulate_virus, state) do
+  def handle_cast(:ring, state) do
+    Enum.each(state.population, fn person ->
+      GenServer.cast(person, :stop_simulating)
+    end)
+
+    simulation_time = DateTime.diff(DateTime.utc_now(), state.simulation_start_datetime)
+    IO.puts("Simulation time: #{inspect(simulation_time)}")
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast({:simulate_virus, time}, state) do
+    GenServer.cast(EpidemicSimulator.Timer, {:start, time})
+
     first_infected_person = Enum.random(state.population)
     GenServer.cast(first_infected_person, {:infect, state.virus})
 

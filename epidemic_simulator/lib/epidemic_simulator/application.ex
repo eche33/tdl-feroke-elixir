@@ -11,6 +11,7 @@ defmodule EpidemicSimulator.Application do
       # Starts a worker by calling: EpidemicSimulator.Worker.start_link(arg)
       # {EpidemicSimulator.Worker, arg}
       {EpidemicSimulator, name: EpidemicSimulator},
+      {EpidemicSimulator.Timer, name: EpidemicSimulator.Timer},
       {DynamicSupervisor, name: EpidemicSimulator.PopulationSupervisor, strategy: :one_for_one}
     ]
 
