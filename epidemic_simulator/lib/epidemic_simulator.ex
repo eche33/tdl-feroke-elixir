@@ -17,7 +17,7 @@ defmodule EpidemicSimulator do
     GenServer.call(@me, [:create_virus, virality])
   end
 
-  def simulate_virus(first_infected_person) do
+  def simulate_virus() do
     population = GenServer.call(@me, :population)
     virus = GenServer.call(@me, :virus)
 
@@ -29,7 +29,7 @@ defmodule EpidemicSimulator do
       raise "You need to create a population first"
     end
 
-    GenServer.cast(@me, [:simulate_virus, first_infected_person])
+    GenServer.cast(@me, :simulate_virus)
   end
 
   def amount_of_sick_people() do
@@ -172,7 +172,8 @@ defmodule EpidemicSimulator do
   end
 
   @impl true
-  def handle_cast([:simulate_virus, first_infected_person], state) do
+  def handle_cast(:simulate_virus, state) do
+    first_infected_person = Enum.random(state.population)
     GenServer.cast(first_infected_person, {:infect, state.virus})
 
     new_state = %{
