@@ -14,10 +14,10 @@ defmodule EpidemicSimulator.Timer do
   end
 
   @impl true
-  def handle_cast({:start, time}, state) do
+  def handle_cast({:start, time, name}, state) do
     :timer.sleep(:timer.seconds(time))
 
-    GenServer.cast(EpidemicSimulator, :ring)
+    GenServer.cast(name, :ring)
     {:noreply, state}
   end
 

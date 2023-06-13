@@ -16,7 +16,8 @@ defmodule EpidemicSimulator.Adult do
       neighbours: neighbours_without_me,
       health_status: :healthy,
       contagion_resistance: 0.2,
-      simulation_running: true
+      simulation_running: true,
+      virus: nil
     }
 
     {:ok, initial_state}
@@ -38,6 +39,8 @@ defmodule EpidemicSimulator.Adult do
       case state.health_status do
         :healthy ->
           if (EpidemicSimulator.Helpers.ContagionHelper.get_sick?(state)) do
+            GenServer.start_link(EpidemicSimulator.Timer, :ok, name: String.to_atom("#{state.name}_timer"))
+            GenServer.cast(String.to_atom("#{state.name}_timer"), {:start, 1, state.name})
             IO.puts("#{state.name}: me enferme :(")
 
             :sick
@@ -81,5 +84,13 @@ defmodule EpidemicSimulator.Adult do
     end
 
     {:noreply, new_state}
+  end
+
+  def handle_cast(:ring, state) do
+    IO.puts("#{state.name}: ring ring ring")
+
+    Agent.stop(String.to_atom("#{state.name}_timer"))
+
+    {:noreply, state}
   end
 end

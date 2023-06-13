@@ -39,6 +39,8 @@ defmodule EpidemicSimulator.Child do
       case state.health_status do
         :healthy ->
           if (EpidemicSimulator.Helpers.ContagionHelper.get_sick?(state)) do
+            GenServer.start_link(EpidemicSimulator.Timer, :ok, name: String.to_atom("#{state.name}_timer"))
+            GenServer.cast(String.to_atom("#{state.name}_timer"), {:start, 1, state.name})
             IO.puts("#{state.name}: me enferme :(")
 
             :sick
@@ -49,6 +51,7 @@ defmodule EpidemicSimulator.Child do
 
 
         :sick ->
+          IO.puts("#{state.name}: ya estoy enfermo")
           :sick
       end
 
@@ -81,6 +84,14 @@ defmodule EpidemicSimulator.Child do
     end
 
     {:noreply, new_state}
+  end
+
+  def handle_cast(:ring, state) do
+    IO.puts("#{state.name}: ring ring ring")
+
+    Agent.stop(String.to_atom("#{state.name}_timer"))
+
+    {:noreply, state}
   end
 
 end

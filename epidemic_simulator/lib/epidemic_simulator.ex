@@ -190,7 +190,7 @@ defmodule EpidemicSimulator do
       GenServer.cast(person, :start_simulating)
     end)
 
-    GenServer.cast(EpidemicSimulator.Timer, {:start, time})
+    GenServer.cast(EpidemicSimulator.Timer, {:start, time, @me})
 
     first_infected_person = Enum.random(state.population)
     GenServer.cast(first_infected_person, {:infect, state.virus})
