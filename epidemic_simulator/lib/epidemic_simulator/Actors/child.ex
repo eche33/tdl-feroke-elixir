@@ -9,6 +9,7 @@ defmodule EpidemicSimulator.Child do
   @impl true
   def init([name, neighbours]) do
     contagion_resistance = 0.1
+
     initial_state = initialize_person_with(name, neighbours, contagion_resistance)
 
     {:ok, initial_state}
