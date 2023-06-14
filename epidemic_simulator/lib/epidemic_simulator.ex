@@ -161,6 +161,25 @@ defmodule EpidemicSimulator do
   end
 
   @impl true
+  def handle_cast({:simulate_virus, time}, state) do
+    Enum.each(state.population, fn person ->
+      GenServer.cast(person, :start_simulating)
+    end)
+
+    GenServer.cast(EpidemicSimulator.Timer, {:start, time, @me, :stop_simulation})
+
+    first_infected_person = Enum.random(state.population)
+    GenServer.cast(first_infected_person, {:infect, state.virus})
+
+    new_state = %{
+      state
+    | simulation_start_datetime: DateTime.utc_now()
+    }
+
+    {:noreply, new_state}
+  end
+
+  @impl true
   def handle_cast(:stop_simulation, state) do
     Enum.each(state.population, fn person ->
       GenServer.cast(person, :stop_simulating)
@@ -171,37 +190,4 @@ defmodule EpidemicSimulator do
 
     {:noreply, state}
   end
-
-  @impl true
-  def handle_cast(:ring, state) do
-    Enum.each(state.population, fn person ->
-      GenServer.cast(person, :stop_simulating)
-    end)
-
-    simulation_time = DateTime.diff(DateTime.utc_now(), state.simulation_start_datetime)
-    IO.puts("Simulation time: #{inspect(simulation_time)}")
-
-    {:noreply, state}
-  end
-
-  @impl true
-  def handle_cast({:simulate_virus, time}, state) do
-    Enum.each(state.population, fn person ->
-      GenServer.cast(person, :start_simulating)
-    end)
-
-    GenServer.cast(EpidemicSimulator.Timer, {:start, time, @me})
-
-    first_infected_person = Enum.random(state.population)
-    GenServer.cast(first_infected_person, {:infect, state.virus})
-
-    new_state = %{
-      state
-      | simulation_start_datetime: DateTime.utc_now()
-    }
-
-    {:noreply, new_state}
-  end
-
-
 end

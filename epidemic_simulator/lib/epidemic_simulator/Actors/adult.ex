@@ -51,7 +51,13 @@ defmodule EpidemicSimulator.Adult do
 
   def handle_cast(:ring, state) do
     Agent.stop(String.to_atom("#{state.name}_timer"))
+    IO.puts("#{state.name}: I got sick")
+    new_state = %{state | health_status: :sick}
 
-    {:noreply, state}
+    if state.simulation_running do
+      infect_neighbours(state.neighbours, state.virus)
+    end
+
+    {:noreply, new_state}
   end
 end

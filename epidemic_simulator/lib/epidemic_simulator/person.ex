@@ -20,25 +20,22 @@ defmodule EpidemicSimulator.Person do
     new_health_status = case state.health_status do
       :healthy ->
         if (get_sick?(state.contagion_resistance)) do
-          #incubation_time = 1
-          #start_incubating_virus(incubation_time, state.name)
-          IO.puts("#{state.name}: me enferme :(")
+          incubation_time = 1
+          start_incubating_virus(incubation_time, state.name)
+          IO.puts("#{state.name}: i am incubating virus")
 
-          :sick
+          :incubating
         else
           IO.puts("#{state.name}: Zafé, no me contagié")
           :healthy
         end
 
-
       :sick ->
-        IO.puts("#{state.name}: ya estoy enfermo")
+#        IO.puts("#{state.name}: ya estoy enfermo")
         :sick
-    end
 
-    if state.simulation_running and new_health_status == :sick do
-      #:timer.sleep(:timer.seconds(1))
-      infect_neighbours(state.neighbours, virus)
+      :incubating ->
+        :incubating
     end
 
     new_health_status
@@ -53,7 +50,7 @@ defmodule EpidemicSimulator.Person do
 
   defp start_incubating_virus(incubation_time, name) do
     GenServer.start_link(EpidemicSimulator.Timer, :ok, name: String.to_atom("#{name}_timer"))
-    GenServer.cast(String.to_atom("#{name}_timer"), {:start, incubation_time, name})
+    GenServer.cast(String.to_atom("#{name}_timer"), {:start, incubation_time, name, :ring})
   end
 
   defp get_sick?(contagion_resistance) do
