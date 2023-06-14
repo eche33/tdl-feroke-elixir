@@ -49,7 +49,7 @@ defmodule EpidemicSimulator.Child do
     {:noreply, new_state}
   end
 
-  def handle_cast(:ring, state) do
+  def handle_cast(:get_sick, state) do
     Agent.stop(String.to_atom("#{state.name}_timer"))
     IO.puts("#{state.name}: I got sick")
     new_state = %{state | health_status: :sick}

@@ -50,7 +50,7 @@ defmodule EpidemicSimulator.Person do
 
   defp start_incubating_virus(incubation_time, name) do
     GenServer.start_link(EpidemicSimulator.Timer, :ok, name: String.to_atom("#{name}_timer"))
-    GenServer.cast(String.to_atom("#{name}_timer"), {:start, incubation_time, name, :ring})
+    GenServer.cast(String.to_atom("#{name}_timer"), {:start, incubation_time, name, :get_sick})
   end
 
   defp get_sick?(contagion_resistance) do
