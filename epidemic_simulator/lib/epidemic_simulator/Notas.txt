@@ -1,4 +1,6 @@
 - pasar las responsabilidades al simulator -> LISTO
-- sacar el codigo repetido entre el child y el adult
-- que solo se mande el mensaje de infect una vez para que tenga sentido la simulación
+- sacar el codigo repetido entre el child y el adult -> LISTO
+- que solo se mande el mensaje de infect una vez para que tenga sentido la simulación -> LISTO, DEPSUES DEL INCUBATION TIME
 - pensar la condicion de corte -> POR AHORA MANUAL
+
+- pausar el timer cuando las personas reciben stop simulation, luego sde puede reanudar
