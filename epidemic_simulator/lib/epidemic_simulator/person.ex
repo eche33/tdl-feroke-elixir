@@ -17,7 +17,7 @@ defmodule EpidemicSimulator.Person do
   end
 
   def virus_enter_the_body(state, virus) do
-    incubation_time = 1
+    incubation_time = virus.incubation_time
 
     new_health_status =
       if(state.health_status == :healthy) do
