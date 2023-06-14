@@ -1,4 +1,5 @@
 defmodule EpidemicSimulator.Person do
+
   def initialize_person_with(name, neighbours, contagion_resistance) do
     neighbours_without_me = List.delete(neighbours, name)
     IO.puts("I'm #{inspect(name)}")
@@ -23,11 +24,11 @@ defmodule EpidemicSimulator.Person do
       if(state.health_status == :healthy) do
         if virus_beats_immune_system?(state.contagion_resistance) do
           start_incubating_virus(incubation_time, state.name)
-          IO.puts("#{state.name}: i am incubating virus")
+          IO.puts("#{state.name}: I am incubating virus")
 
           :incubating
         else
-          IO.puts("#{state.name}: Zafé, no me contagié")
+          IO.puts("#{state.name}: Didn't get the virus")
           :healthy
         end
       else
