@@ -21,7 +21,7 @@ defmodule EpidemicSimulator.Person do
 
     new_health_status =
       if(state.health_status == :healthy) do
-        if get_sick?(state.contagion_resistance) do
+        if virus_beats_immune_system?(state.contagion_resistance) do
           start_incubating_virus(incubation_time, state.name)
           IO.puts("#{state.name}: i am incubating virus")
 
@@ -38,20 +38,21 @@ defmodule EpidemicSimulator.Person do
   end
 
   def infect_neighbours(neighbours, virus) do
-    Enum.each(1..virus.virality, fn _ ->
+    amount_of_neighbours_to_infect = virus.virality
+
+    Enum.each(1..amount_of_neighbours_to_infect, fn _ ->
       neighbour_to_infect = Enum.random(neighbours)
       GenServer.cast(neighbour_to_infect, {:infect, virus})
     end)
   end
 
   defp start_incubating_virus(incubation_time, name) do
-    GenServer.start_link(EpidemicSimulator.Timer, :ok, name: String.to_atom("#{name}_timer"))
-    GenServer.cast(String.to_atom("#{name}_timer"), {:start, incubation_time, name, :get_sick})
+    timer_identifier =  String.to_atom("#{name}_timer")
+    GenServer.start_link(EpidemicSimulator.Timer, :ok, name: timer_identifier)
+    GenServer.cast(timer_identifier, {:start, incubation_time, name, :get_sick})
   end
 
-  defp get_sick?(contagion_resistance) do
-    contagion_resistance = contagion_resistance
-
+  defp virus_beats_immune_system?(contagion_resistance) do
     contagion_resistance < :rand.uniform()
   end
 end
