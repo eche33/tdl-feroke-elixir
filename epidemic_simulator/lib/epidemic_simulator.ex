@@ -166,7 +166,9 @@ defmodule EpidemicSimulator do
       GenServer.cast(person, :start_simulating)
     end)
 
-    GenServer.cast(EpidemicSimulator.Timer, {:start, time, @me, :stop_simulation})
+    timer_identifier =  String.to_atom("#{@me}_timer")
+    GenServer.start_link(EpidemicSimulator.Timer, :ok, name: timer_identifier)
+    GenServer.cast(timer_identifier, {:start, time, @me, :stop_simulation})
 
     first_infected_person = Enum.random(state.population)
     GenServer.cast(first_infected_person, {:infect, state.virus})
@@ -181,6 +183,8 @@ defmodule EpidemicSimulator do
 
   @impl true
   def handle_cast(:stop_simulation, state) do
+    Agent.stop(String.to_atom("#{@me}_timer"))
+
     Enum.each(state.population, fn person ->
       GenServer.cast(person, :stop_simulating)
     end)
