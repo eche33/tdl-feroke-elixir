@@ -27,10 +27,9 @@ defmodule EpidemicSimulator.Adult do
 
   @impl true
   def handle_cast({:infect, virus}, state) do
-    new_health_status = affect_body_with_virus(state, virus)
+    new_state = virus_enter_the_body(state, virus)
 
-    new_state_with_virus = %{state | health_status: new_health_status, virus: virus}
-    {:noreply, new_state_with_virus}
+    {:noreply, new_state}
   end
 
   def handle_cast(:stop_simulating, state) do

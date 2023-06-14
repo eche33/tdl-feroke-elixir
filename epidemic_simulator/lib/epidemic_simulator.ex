@@ -173,7 +173,7 @@ defmodule EpidemicSimulator do
 
     new_state = %{
       state
-    | simulation_start_datetime: DateTime.utc_now()
+      | simulation_start_datetime: DateTime.utc_now()
     }
 
     {:noreply, new_state}

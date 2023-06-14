@@ -1,7 +1,7 @@
 defmodule EpidemicSimulator.Timer do
   use GenServer
 
-@me __MODULE__
+  @me __MODULE__
 
   def start_link(opts) do
     GenServer.start_link(@me, :ok, opts)
@@ -9,7 +9,6 @@ defmodule EpidemicSimulator.Timer do
 
   @impl true
   def init(:ok) do
-
     {:ok, []}
   end
 

@@ -16,11 +16,12 @@ defmodule EpidemicSimulator.Person do
     initial_state
   end
 
-  def affect_body_with_virus(state, virus) do
-    new_health_status = case state.health_status do
-      :healthy ->
-        if (get_sick?(state.contagion_resistance)) do
-          incubation_time = 1
+  def virus_enter_the_body(state, virus) do
+    incubation_time = 1
+
+    new_health_status =
+      if(state.health_status == :healthy) do
+        if get_sick?(state.contagion_resistance) do
           start_incubating_virus(incubation_time, state.name)
           IO.puts("#{state.name}: i am incubating virus")
 
@@ -29,16 +30,11 @@ defmodule EpidemicSimulator.Person do
           IO.puts("#{state.name}: Zafé, no me contagié")
           :healthy
         end
+      else
+        state.health_status
+      end
 
-      :sick ->
-#        IO.puts("#{state.name}: ya estoy enfermo")
-        :sick
-
-      :incubating ->
-        :incubating
-    end
-
-    new_health_status
+    %{state | health_status: new_health_status, virus: virus}
   end
 
   def infect_neighbours(neighbours, virus) do
