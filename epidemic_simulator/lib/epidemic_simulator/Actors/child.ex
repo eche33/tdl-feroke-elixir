@@ -1,5 +1,6 @@
 defmodule EpidemicSimulator.Child do
   use GenServer
+  import EpidemicSimulator.Person
 
   def start_link([name, neighbours]) do
     GenServer.start_link(__MODULE__, [name, neighbours], name: name)
@@ -7,18 +8,8 @@ defmodule EpidemicSimulator.Child do
 
   @impl true
   def init([name, neighbours]) do
-    neighbours_without_me = List.delete(neighbours, name)
-    IO.puts("I'm #{inspect(name)}")
-    IO.puts("#{name}: my neighnours are #{inspect(neighbours_without_me)}")
-
-    initial_state = %EpidemicSimulator.Structs.CitizenInformation{
-      name: name,
-      neighbours: neighbours_without_me,
-      health_status: :healthy,
-      contagion_resistance: 0.1,
-      simulation_running: true,
-      virus: nil
-    }
+    contagion_resistance = 0.1
+    initial_state = initialize_person_with(name, neighbours, contagion_resistance)
 
     {:ok, initial_state}
   end
@@ -35,36 +26,10 @@ defmodule EpidemicSimulator.Child do
 
   @impl true
   def handle_cast({:infect, virus}, state) do
-    new_health_status =
-      case state.health_status do
-        :healthy ->
-          if (EpidemicSimulator.Helpers.ContagionHelper.get_sick?(state)) do
-            GenServer.start_link(EpidemicSimulator.Timer, :ok, name: String.to_atom("#{state.name}_timer"))
-            GenServer.cast(String.to_atom("#{state.name}_timer"), {:start, 1, state.name})
-            IO.puts("#{state.name}: me enferme :(")
+    new_health_status = affect_body_with_virus(state, virus)
 
-            :sick
-          else
-            IO.puts("#{state.name}: Zafé, no me contagié")
-            :healthy
-          end
-
-
-        :sick ->
-          IO.puts("#{state.name}: ya estoy enfermo")
-          :sick
-      end
-
-    if state.simulation_running and new_health_status == :sick do
-      :timer.sleep(:timer.seconds(1))
-      Enum.each(1..virus.virality, fn _ ->
-        neighbour_to_infect = Enum.random(state.neighbours)
-        GenServer.cast(neighbour_to_infect, {:infect, virus})
-      end)
-    end
-
-    new_state = %{state | health_status: new_health_status, virus: virus}
-    {:noreply, new_state}
+    new_state_with_virus = %{state | health_status: new_health_status, virus: virus}
+    {:noreply, new_state_with_virus}
   end
 
   def handle_cast(:stop_simulating, state) do
@@ -77,21 +42,15 @@ defmodule EpidemicSimulator.Child do
 
     if new_state.health_status == :sick do
       :timer.sleep(:timer.seconds(1))
-      Enum.each(1..state.virus.virality, fn _ ->
-        neighbour_to_infect = Enum.random(state.neighbours)
-        GenServer.cast(neighbour_to_infect, {:infect, state.virus})
-      end)
+      infect_neighbours(state.neighbours, state.virus)
     end
 
     {:noreply, new_state}
   end
 
   def handle_cast(:ring, state) do
-    IO.puts("#{state.name}: ring ring ring")
-
     Agent.stop(String.to_atom("#{state.name}_timer"))
 
     {:noreply, state}
   end
-
 end
