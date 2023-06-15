@@ -4,6 +4,7 @@ defmodule EpidemicSimulator.Structs.CitizenInformation do
     :neighbours,
     :health_status,
     :contagion_resistance,
+    :comorbidities,
     :simulation_running,
     :virus
   ]

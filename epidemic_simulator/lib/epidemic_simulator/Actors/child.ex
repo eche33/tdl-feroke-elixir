@@ -9,8 +9,9 @@ defmodule EpidemicSimulator.Child do
   @impl true
   def init([name, neighbours]) do
     contagion_resistance = 0.1
+    comorbidities = -0.03
 
-    initial_state = initialize_person_with(name, neighbours, contagion_resistance)
+    initial_state = initialize_person_with(name, neighbours, contagion_resistance, comorbidities)
 
     {:ok, initial_state}
   end
@@ -23,6 +24,16 @@ defmodule EpidemicSimulator.Child do
   @impl true
   def handle_call(:is_healthy, _, state) do
     {:reply, state.health_status == :healthy, state}
+  end
+
+  @impl true
+  def handle_call(:is_dead, _, state) do
+    {:reply, state.health_status == :dead, state}
+  end
+
+  @impl true
+  def handle_call(:is_immune, _, state) do
+    {:reply, state.health_status == :immune, state}
   end
 
   @impl true
@@ -41,7 +52,7 @@ defmodule EpidemicSimulator.Child do
     new_state = %{state | simulation_running: true}
 
     if new_state.health_status == :sick do
-      :timer.sleep(:timer.seconds(1))
+      convalescence_period(state.name, state.virus)
       infect_neighbours(state.neighbours, state.virus)
     end
 
@@ -54,9 +65,27 @@ defmodule EpidemicSimulator.Child do
     new_state = %{state | health_status: :sick}
 
     if state.simulation_running do
+      convalescence_period(state.name, state.virus)
       infect_neighbours(state.neighbours, state.virus)
     end
 
     {:noreply, new_state}
   end
+
+  def handle_cast(:finish_convalescence, state) do
+    Agent.stop(String.to_atom("#{state.name}_timer"))
+
+    new_health_status = heal_or_die(state.virus, state.comorbidities)
+
+    if new_health_status == :immune do
+      IO.puts("#{state.name}: I'm immune now!")
+    else
+      IO.puts("#{state.name}: I died :(")
+    end
+
+    new_state = %{state | health_status: new_health_status}
+
+    {:noreply, new_state}
+  end
+
 end

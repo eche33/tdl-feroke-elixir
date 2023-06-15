@@ -13,8 +13,8 @@ defmodule EpidemicSimulator do
     GenServer.call(@me, [:create_population, adults, childs])
   end
 
-  def create_virus(virality, incubation_time) do
-    GenServer.call(@me, [:create_virus, virality, incubation_time])
+  def create_virus(virality, incubation_time, sick_time, lethality) do
+    GenServer.call(@me, [:create_virus, virality, incubation_time, sick_time, lethality])
   end
 
   def simulate_virus(time) do
@@ -38,6 +38,14 @@ defmodule EpidemicSimulator do
 
   def amount_of_healthy_people() do
     GenServer.call(@me, :amount_of_healthy_people)
+  end
+
+  def amount_of_dead_people() do
+    GenServer.call(@me, :amount_of_dead_people)
+  end
+
+  def amount_of_immune_people() do
+    GenServer.call(@me, :amount_of_immune_people)
   end
 
   def stop_simulation() do
@@ -135,6 +143,26 @@ defmodule EpidemicSimulator do
   end
 
   @impl true
+  def handle_call(:amount_of_dead_people, _, state) do
+    result =
+      Enum.count(state.population, fn person ->
+        GenServer.call(person, :is_dead)
+      end)
+
+    {:reply, result, state}
+  end
+
+  @impl true
+  def handle_call(:amount_of_immune_people, _, state) do
+    result =
+      Enum.count(state.population, fn person ->
+        GenServer.call(person, :is_immune)
+      end)
+
+    {:reply, result, state}
+  end
+
+  @impl true
   def handle_call(:simulation_running?, _from, state) do
     sick_people = state.population_health_status[:sick]
 
@@ -144,12 +172,12 @@ defmodule EpidemicSimulator do
   end
 
   @impl true
-  def handle_call([:create_virus, virality, incubation_time], _from, state) do
+  def handle_call([:create_virus, virality, incubation_time, sick_time, lethality], _from, state) do
     virus = %EpidemicSimulator.Structs.VirusInformation{
       virality: virality,
       incubation_time: incubation_time,
-      lethality: 0.1,
-      sick_time: 5
+      lethality: lethality,
+      sick_time: sick_time
     }
 
     new_state = %{
