@@ -9,6 +9,7 @@ defmodule EpidemicSimulator.Child do
   @impl true
   def init([name, neighbours]) do
     contagion_resistance = 0.1
+
     initial_state = initialize_person_with(name, neighbours, contagion_resistance)
 
     {:ok, initial_state}
@@ -26,10 +27,9 @@ defmodule EpidemicSimulator.Child do
 
   @impl true
   def handle_cast({:infect, virus}, state) do
-    new_health_status = affect_body_with_virus(state, virus)
+    new_state = virus_enter_the_body(state, virus)
 
-    new_state_with_virus = %{state | health_status: new_health_status, virus: virus}
-    {:noreply, new_state_with_virus}
+    {:noreply, new_state}
   end
 
   def handle_cast(:stop_simulating, state) do
@@ -48,9 +48,15 @@ defmodule EpidemicSimulator.Child do
     {:noreply, new_state}
   end
 
-  def handle_cast(:ring, state) do
+  def handle_cast(:get_sick, state) do
     Agent.stop(String.to_atom("#{state.name}_timer"))
+    IO.puts("#{state.name}: I got sick")
+    new_state = %{state | health_status: :sick}
 
-    {:noreply, state}
+    if state.simulation_running do
+      infect_neighbours(state.neighbours, state.virus)
+    end
+
+    {:noreply, new_state}
   end
 end

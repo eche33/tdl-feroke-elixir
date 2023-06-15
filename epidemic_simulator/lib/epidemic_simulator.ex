@@ -13,8 +13,8 @@ defmodule EpidemicSimulator do
     GenServer.call(@me, [:create_population, adults, childs])
   end
 
-  def create_virus(virality) do
-    GenServer.call(@me, [:create_virus, virality])
+  def create_virus(virality, incubation_time) do
+    GenServer.call(@me, [:create_virus, virality, incubation_time])
   end
 
   def simulate_virus(time) do
@@ -144,10 +144,10 @@ defmodule EpidemicSimulator do
   end
 
   @impl true
-  def handle_call([:create_virus, virality], _from, state) do
+  def handle_call([:create_virus, virality, incubation_time], _from, state) do
     virus = %EpidemicSimulator.Structs.VirusInformation{
       virality: virality,
-      incubation_time: 2,
+      incubation_time: incubation_time,
       lethality: 0.1,
       sick_time: 5
     }
@@ -161,36 +161,13 @@ defmodule EpidemicSimulator do
   end
 
   @impl true
-  def handle_cast(:stop_simulation, state) do
-    Enum.each(state.population, fn person ->
-      GenServer.cast(person, :stop_simulating)
-    end)
-
-    simulation_time = DateTime.diff(DateTime.utc_now(), state.simulation_start_datetime)
-    IO.puts("Simulation time: #{inspect(simulation_time)}")
-
-    {:noreply, state}
-  end
-
-  @impl true
-  def handle_cast(:ring, state) do
-    Enum.each(state.population, fn person ->
-      GenServer.cast(person, :stop_simulating)
-    end)
-
-    simulation_time = DateTime.diff(DateTime.utc_now(), state.simulation_start_datetime)
-    IO.puts("Simulation time: #{inspect(simulation_time)}")
-
-    {:noreply, state}
-  end
-
-  @impl true
   def handle_cast({:simulate_virus, time}, state) do
     Enum.each(state.population, fn person ->
       GenServer.cast(person, :start_simulating)
     end)
 
-    GenServer.cast(EpidemicSimulator.Timer, {:start, time, @me})
+    timer_identifier =  String.to_atom("#{@me}_timer")
+    EpidemicSimulator.Timer.start_timer(timer_identifier, @me, time, :stop_simulation)
 
     first_infected_person = Enum.random(state.population)
     GenServer.cast(first_infected_person, {:infect, state.virus})
@@ -203,5 +180,17 @@ defmodule EpidemicSimulator do
     {:noreply, new_state}
   end
 
+  @impl true
+  def handle_cast(:stop_simulation, state) do
+    Agent.stop(String.to_atom("#{@me}_timer"))
 
+    Enum.each(state.population, fn person ->
+      GenServer.cast(person, :stop_simulating)
+    end)
+
+    simulation_time = DateTime.diff(DateTime.utc_now(), state.simulation_start_datetime)
+    IO.puts("Simulation time: #{inspect(simulation_time)}")
+
+    {:noreply, state}
+  end
 end

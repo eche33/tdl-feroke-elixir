@@ -19,7 +19,7 @@ defmodule EpidemicSimulatorTest do
   end
 
   test "can't simulate without a created virus" do
-    EpidemicSimulator.create_population(2,2)
+    EpidemicSimulator.create_population(2, 2)
 
     assert_raise RuntimeError, fn ->
       EpidemicSimulator.simulate_virus(:Adult1)
