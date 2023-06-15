@@ -41,7 +41,7 @@ defmodule EpidemicSimulator.Child do
     new_state = %{state | simulation_running: true}
 
     if new_state.health_status == :sick do
-      :timer.sleep(:timer.seconds(1))
+      convalescence_period(state.name, state.virus)
       infect_neighbours(state.neighbours, state.virus)
     end
 
@@ -54,9 +54,19 @@ defmodule EpidemicSimulator.Child do
     new_state = %{state | health_status: :sick}
 
     if state.simulation_running do
+      convalescence_period(state.name, state.virus)
       infect_neighbours(state.neighbours, state.virus)
     end
 
     {:noreply, new_state}
   end
+
+  def handle_cast(:finish_convalescence, state) do
+    Agent.stop(String.to_atom("#{state.name}_timer"))
+    IO.puts("#{state.name}: I'm healthy again (or not)")
+
+    # new_state = %{state | health_status: :healthy}
+    {:noreply, state}
+  end
+
 end

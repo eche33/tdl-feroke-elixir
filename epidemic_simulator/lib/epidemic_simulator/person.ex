@@ -47,6 +47,12 @@ defmodule EpidemicSimulator.Person do
     end)
   end
 
+  def convalescence_period(name, virus) do
+    sick_time = virus.sick_time
+    timer_identifier =  String.to_atom("#{name}_timer")
+    EpidemicSimulator.Timer.start_timer(timer_identifier, name, sick_time, :finish_convalescence)
+  end
+
   defp start_incubating_virus(incubation_time, name) do
     timer_identifier =  String.to_atom("#{name}_timer")
     EpidemicSimulator.Timer.start_timer(timer_identifier, name, incubation_time, :get_sick)
