@@ -32,6 +32,11 @@ defmodule EpidemicSimulator.Adult do
   end
 
   @impl true
+  def handle_call(:is_immune, _, state) do
+    {:reply, state.health_status == :immune, state}
+  end
+
+  @impl true
   def handle_cast({:infect, virus}, state) do
     new_state = virus_enter_the_body(state, virus)
 

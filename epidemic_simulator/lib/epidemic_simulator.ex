@@ -44,6 +44,10 @@ defmodule EpidemicSimulator do
     GenServer.call(@me, :amount_of_dead_people)
   end
 
+  def amount_of_immune_people() do
+    GenServer.call(@me, :amount_of_immune_people)
+  end
+
   def stop_simulation() do
     GenServer.cast(@me, :stop_simulation)
   end
@@ -143,6 +147,16 @@ defmodule EpidemicSimulator do
     result =
       Enum.count(state.population, fn person ->
         GenServer.call(person, :is_dead)
+      end)
+
+    {:reply, result, state}
+  end
+
+  @impl true
+  def handle_call(:amount_of_immune_people, _, state) do
+    result =
+      Enum.count(state.population, fn person ->
+        GenServer.call(person, :is_immune)
       end)
 
     {:reply, result, state}
