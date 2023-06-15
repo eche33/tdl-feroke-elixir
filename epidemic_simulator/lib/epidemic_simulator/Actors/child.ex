@@ -9,8 +9,9 @@ defmodule EpidemicSimulator.Child do
   @impl true
   def init([name, neighbours]) do
     contagion_resistance = 0.1
+    comorbidities = -0.03
 
-    initial_state = initialize_person_with(name, neighbours, contagion_resistance)
+    initial_state = initialize_person_with(name, neighbours, contagion_resistance, comorbidities)
 
     {:ok, initial_state}
   end
@@ -63,10 +64,18 @@ defmodule EpidemicSimulator.Child do
 
   def handle_cast(:finish_convalescence, state) do
     Agent.stop(String.to_atom("#{state.name}_timer"))
-    IO.puts("#{state.name}: I'm healthy again (or not)")
 
-    # new_state = %{state | health_status: :healthy}
-    {:noreply, state}
+    new_health_status = heal_or_die(state.virus, state.comorbidities)
+
+    if new_health_status == :immune do
+      IO.puts("#{state.name}: I'm immune now!")
+    else
+      IO.puts("#{state.name}: I died :(")
+    end
+
+    new_state = %{state | health_status: new_health_status}
+
+    {:noreply, new_state}
   end
 
 end
