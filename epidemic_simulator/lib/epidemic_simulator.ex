@@ -13,8 +13,8 @@ defmodule EpidemicSimulator do
     GenServer.call(@me, [:create_population, adults, childs])
   end
 
-  def create_virus(virality, incubation_time, sick_time) do
-    GenServer.call(@me, [:create_virus, virality, incubation_time, sick_time])
+  def create_virus(virality, incubation_time, sick_time, lethality) do
+    GenServer.call(@me, [:create_virus, virality, incubation_time, sick_time, lethality])
   end
 
   def simulate_virus(time) do
@@ -144,11 +144,11 @@ defmodule EpidemicSimulator do
   end
 
   @impl true
-  def handle_call([:create_virus, virality, incubation_time, sick_time], _from, state) do
+  def handle_call([:create_virus, virality, incubation_time, sick_time, lethality], _from, state) do
     virus = %EpidemicSimulator.Structs.VirusInformation{
       virality: virality,
       incubation_time: incubation_time,
-      lethality: 0.1,
+      lethality: lethality,
       sick_time: sick_time
     }
 
