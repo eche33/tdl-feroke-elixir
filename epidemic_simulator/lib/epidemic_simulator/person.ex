@@ -70,6 +70,29 @@ defmodule EpidemicSimulator.Person do
     end
   end
 
+  def act_based_on_new_health_status(new_health_status, state) do
+
+      new_state = case new_health_status do
+                    :sick ->
+                      IO.puts("#{state.name}: I got sick")
+                      if state.simulation_running do
+                        convalescence_period(state.name, state.virus)
+                        infect_neighbours(state.neighbours, state.virus)
+                      end
+                      %{state | health_status: :sick}
+
+                    :immune ->
+                      IO.puts("#{state.name}: I'm immune now!")
+                      %{state | health_status: :immune}
+
+                    :dead ->
+                      IO.puts("#{state.name}: I died :(")
+                      %{state | health_status: :dead}
+                  end
+
+      new_state
+  end
+
   defp virus_kills_person?(lethality, comorbidities) do
     lethality + comorbidities > :rand.uniform()
   end

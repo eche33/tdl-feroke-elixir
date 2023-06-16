@@ -10,7 +10,7 @@ defmodule EpidemicSimulator do
   end
 
   def create_population do
-    IO.puts("How many adultls do you want to create?")
+    IO.puts("How many adults do you want to create?")
     adults = IO.gets("") |> String.trim() |> String.to_integer()
 
     IO.puts("How many children do you want to create?")
