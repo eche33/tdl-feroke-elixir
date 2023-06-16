@@ -59,31 +59,57 @@ defmodule EpidemicSimulator.Adult do
     {:noreply, new_state}
   end
 
-  def handle_cast(:get_sick, state) do
+  # def handle_cast(:get_sick, state) do
+  #   Agent.stop(String.to_atom("#{state.name}_timer"))
+  #   IO.puts("#{state.name}: I got sick")
+  #   new_state = %{state | health_status: :sick}
+
+  #   if state.simulation_running do
+  #     convalescence_period(state.name, state.virus)
+  #     infect_neighbours(state.neighbours, state.virus)
+  #   end
+
+  #   {:noreply, new_state}
+  # end
+
+  # def handle_cast(:finish_convalescence, state) do
+  #   Agent.stop(String.to_atom("#{state.name}_timer"))
+
+  #   new_health_status = heal_or_die(state.virus, state.comorbidities)
+
+  #   if new_health_status == :immune do
+  #     IO.puts("#{state.name}: I'm immune now!")
+  #   else
+  #     IO.puts("#{state.name}: I died :(")
+  #   end
+
+  #   new_state = %{state | health_status: new_health_status}
+
+  #   {:noreply, new_state}
+  # end
+
+  def handle_cast(:ring, state) do
     Agent.stop(String.to_atom("#{state.name}_timer"))
-    IO.puts("#{state.name}: I got sick")
-    new_state = %{state | health_status: :sick}
 
-    if state.simulation_running do
-      convalescence_period(state.name, state.virus)
-      infect_neighbours(state.neighbours, state.virus)
-    end
+    new_health_status = get_next_health_status(state.health_status, state.virus, state.comorbidities)
 
-    {:noreply, new_state}
-  end
+    new_state = case new_health_status do
+                  :sick ->
+                    IO.puts("#{state.name}: I got sick")
+                    if state.simulation_running do
+                      convalescence_period(state.name, state.virus)
+                      infect_neighbours(state.neighbours, state.virus)
+                    end
+                    %{state | health_status: :sick}
 
-  def handle_cast(:finish_convalescence, state) do
-    Agent.stop(String.to_atom("#{state.name}_timer"))
+                  :immune ->
+                    IO.puts("#{state.name}: I'm immune now!")
+                    %{state | health_status: :immune}
 
-    new_health_status = heal_or_die(state.virus, state.comorbidities)
-
-    if new_health_status == :immune do
-      IO.puts("#{state.name}: I'm immune now!")
-    else
-      IO.puts("#{state.name}: I died :(")
-    end
-
-    new_state = %{state | health_status: new_health_status}
+                  :dead ->
+                    IO.puts("#{state.name}: I died :(")
+                    %{state | health_status: :dead}
+                end
 
     {:noreply, new_state}
   end
