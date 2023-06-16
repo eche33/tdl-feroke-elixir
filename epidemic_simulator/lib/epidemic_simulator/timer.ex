@@ -3,9 +3,9 @@ defmodule EpidemicSimulator.Timer do
 
   @me __MODULE__
 
-  def start_timer(timer_name, caller_name, time, callback_message) do
+  def start_timer(timer_name, caller_name, time) do
     GenServer.start_link(@me, :ok, name: timer_name)
-    GenServer.cast(timer_name, {:start, time, caller_name, callback_message})
+    GenServer.cast(timer_name, {:start, time, caller_name})
   end
 
   def start_link(opts) do
@@ -18,10 +18,10 @@ defmodule EpidemicSimulator.Timer do
   end
 
   @impl true
-  def handle_cast({:start, time, name, callback_message}, state) do
+  def handle_cast({:start, time, name}, state) do
     :timer.sleep(:timer.seconds(time))
 
-    GenServer.cast(name, callback_message)
+    GenServer.cast(name, :ring)
     {:noreply, state}
   end
 end

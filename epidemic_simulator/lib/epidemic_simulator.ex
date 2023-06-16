@@ -10,7 +10,7 @@ defmodule EpidemicSimulator do
   end
 
   def create_population do
-    IO.puts("How many adultls do you want to create?")
+    IO.puts("How many adults do you want to create?")
     adults = IO.gets("") |> String.trim() |> String.to_integer()
 
     IO.puts("How many children do you want to create?")
@@ -222,7 +222,7 @@ defmodule EpidemicSimulator do
     end)
 
     timer_identifier =  String.to_atom("#{@me}_timer")
-    EpidemicSimulator.Timer.start_timer(timer_identifier, @me, time, :stop_simulation)
+    EpidemicSimulator.Timer.start_timer(timer_identifier, @me, time)
 
     first_infected_person = Enum.random(state.population)
     GenServer.cast(first_infected_person, {:infect, state.virus})
@@ -236,7 +236,7 @@ defmodule EpidemicSimulator do
   end
 
   @impl true
-  def handle_cast(:stop_simulation, state) do
+  def handle_cast(:ring, state) do
     Agent.stop(String.to_atom("#{@me}_timer"))
 
     Enum.each(state.population, fn person ->

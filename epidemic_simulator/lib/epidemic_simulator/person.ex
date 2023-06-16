@@ -51,7 +51,7 @@ defmodule EpidemicSimulator.Person do
   def convalescence_period(name, virus) do
     sick_time = virus.sick_time
     timer_identifier =  String.to_atom("#{name}_timer")
-    EpidemicSimulator.Timer.start_timer(timer_identifier, name, sick_time, :finish_convalescence)
+    EpidemicSimulator.Timer.start_timer(timer_identifier, name, sick_time)
   end
 
   def heal_or_die(virus, comorbidities) do
@@ -62,13 +62,44 @@ defmodule EpidemicSimulator.Person do
     end
   end
 
+  def get_next_health_status(health_status, virus, comorbidities) do
+    case health_status do
+      :incubating -> :sick
+      :sick -> heal_or_die(virus, comorbidities)
+      _ -> health_status
+    end
+  end
+
+  def act_based_on_new_health_status(new_health_status, state) do
+
+      new_state = case new_health_status do
+                    :sick ->
+                      IO.puts("#{state.name}: I got sick")
+                      if state.simulation_running do
+                        convalescence_period(state.name, state.virus)
+                        infect_neighbours(state.neighbours, state.virus)
+                      end
+                      %{state | health_status: :sick}
+
+                    :immune ->
+                      IO.puts("#{state.name}: I'm immune now!")
+                      %{state | health_status: :immune}
+
+                    :dead ->
+                      IO.puts("#{state.name}: I died :(")
+                      %{state | health_status: :dead}
+                  end
+
+      new_state
+  end
+
   defp virus_kills_person?(lethality, comorbidities) do
     lethality + comorbidities > :rand.uniform()
   end
 
   defp start_incubating_virus(incubation_time, name) do
     timer_identifier =  String.to_atom("#{name}_timer")
-    EpidemicSimulator.Timer.start_timer(timer_identifier, name, incubation_time, :get_sick)
+    EpidemicSimulator.Timer.start_timer(timer_identifier, name, incubation_time)
   end
 
   defp virus_beats_immune_system?(contagion_resistance) do
