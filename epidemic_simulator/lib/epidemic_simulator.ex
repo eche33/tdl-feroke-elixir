@@ -9,6 +9,17 @@ defmodule EpidemicSimulator do
     GenServer.start_link(@me, :ok, opts)
   end
 
+  def create_population do
+    IO.puts("How many adultls do you want to create?")
+    adults = IO.gets("") |> String.trim() |> String.to_integer()
+
+    IO.puts("How many children do you want to create?")
+    children = IO.gets("") |> String.trim() |> String.to_integer()
+
+    IO.puts("Creating population with #{adults} adults and #{children} children")
+    create_population(adults, children)
+  end
+
   def create_population(adults, childs) do
     GenServer.call(@me, [:create_population, adults, childs])
   end
