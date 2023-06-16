@@ -24,6 +24,22 @@ defmodule EpidemicSimulator do
     GenServer.call(@me, [:create_population, adults, childs])
   end
 
+  def create_virus do
+    IO.puts("Insert the virality:")
+    virality = IO.gets("") |> String.trim() |> String.to_integer()
+
+    IO.puts("Insert incubation time (in seconds):")
+    incubation_time = IO.gets("") |> String.trim() |> String.to_integer()
+
+    IO.puts("Insert sick time (in seconds):")
+    sick_time = IO.gets("") |> String.trim() |> String.to_integer()
+
+    IO.puts("Insert lethality (number between 0 and 1):")
+    lethality = IO.gets("") |> String.trim() |> String.to_float()
+
+    create_virus(virality, incubation_time, sick_time, lethality)
+  end
+
   def create_virus(virality, incubation_time, sick_time, lethality) do
     GenServer.call(@me, [:create_virus, virality, incubation_time, sick_time, lethality])
   end
