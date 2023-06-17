@@ -97,6 +97,13 @@ defmodule EpidemicSimulator do
       )
   end
 
+  defp collect_population_health_status(population) do
+    Enum.reduce(population, %{}, fn person, acc ->
+      health_status = GenServer.call(person, :health_status)
+      Map.update(acc, health_status, 1, & &1 + 1)
+    end)
+  end
+
   @impl true
   def init(:ok) do
     initial_state = %@me{population: [], population_health_status: %{}, virus: nil}
@@ -244,8 +251,22 @@ defmodule EpidemicSimulator do
     end)
 
     simulation_time = DateTime.diff(DateTime.utc_now(), state.simulation_start_datetime)
-    IO.puts("Simulation time: #{inspect(simulation_time)}")
 
-    {:noreply, state}
+    :timer.sleep(:timer.seconds(state.virus.sick_time + state.virus.incubation_time))
+
+    new_population_health_status = collect_population_health_status(state.population)
+
+    new_state = %{
+      state
+      | population_health_status: new_population_health_status
+    }
+
+    IO.puts("")
+    IO.puts("-------------------")
+    IO.puts("Simulation finished")
+    IO.puts("Simulation time: #{inspect(simulation_time)}")
+    IO.puts("Health status: #{inspect(new_population_health_status)}")
+
+    {:noreply, new_state}
   end
 end

@@ -17,6 +17,11 @@ defmodule EpidemicSimulator.Adult do
   end
 
   @impl true
+  def handle_call(:health_status, _, state) do
+    {:reply, state.health_status, state}
+  end
+
+  @impl true
   def handle_call(:is_sick, _, state) do
     {:reply, state.health_status == :sick, state}
   end
