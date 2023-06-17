@@ -59,20 +59,8 @@ defmodule EpidemicSimulator do
     GenServer.cast(@me, {:simulate_virus, time})
   end
 
-  def amount_of_sick_people() do
-    GenServer.call(@me, :amount_of_sick_people)
-  end
-
-  def amount_of_healthy_people() do
-    GenServer.call(@me, :amount_of_healthy_people)
-  end
-
-  def amount_of_dead_people() do
-    GenServer.call(@me, :amount_of_dead_people)
-  end
-
-  def amount_of_immune_people() do
-    GenServer.call(@me, :amount_of_immune_people)
+  def amount_of(health_status) do
+    GenServer.call(@me, {:amount_of, health_status})
   end
 
   def stop_simulation() do
@@ -97,9 +85,17 @@ defmodule EpidemicSimulator do
       )
   end
 
+  defp collect_population_health_status(population) do
+    Enum.reduce(population, %{}, fn person, acc ->
+      health_status = GenServer.call(person, :health_status)
+      Map.update(acc, health_status, 1, & &1 + 1)
+    end)
+  end
+
   @impl true
   def init(:ok) do
-    initial_state = %@me{population: [], population_health_status: %{}, virus: nil}
+    population_health_status = %{:healthy => 0, :sick => 0, :dead => 0, :immune => 0}
+    initial_state = %@me{population: [], population_health_status: population_health_status, virus: nil}
 
     {:ok, initial_state}
   end
@@ -143,49 +139,15 @@ defmodule EpidemicSimulator do
     new_state = %{
       state
       | population: population,
-        population_health_status: %{:healthy => length(population)}
+        population_health_status: %{healthy: length(population), sick: 0, dead: 0, immune: 0}
     }
 
     {:reply, :ok, new_state}
   end
 
   @impl true
-  def handle_call(:amount_of_sick_people, _, state) do
-    result =
-      Enum.count(state.population, fn person ->
-        GenServer.call(person, :is_sick)
-      end)
-
-    {:reply, result, state}
-  end
-
-  @impl true
-  def handle_call(:amount_of_healthy_people, _, state) do
-    result =
-      Enum.count(state.population, fn person ->
-        GenServer.call(person, :is_healthy)
-      end)
-
-    {:reply, result, state}
-  end
-
-  @impl true
-  def handle_call(:amount_of_dead_people, _, state) do
-    result =
-      Enum.count(state.population, fn person ->
-        GenServer.call(person, :is_dead)
-      end)
-
-    {:reply, result, state}
-  end
-
-  @impl true
-  def handle_call(:amount_of_immune_people, _, state) do
-    result =
-      Enum.count(state.population, fn person ->
-        GenServer.call(person, :is_immune)
-      end)
-
+  def handle_call({:amount_of, health_status}, _, state) do
+    result = Map.get(state.population_health_status, health_status)
     {:reply, result, state}
   end
 
@@ -244,8 +206,22 @@ defmodule EpidemicSimulator do
     end)
 
     simulation_time = DateTime.diff(DateTime.utc_now(), state.simulation_start_datetime)
-    IO.puts("Simulation time: #{inspect(simulation_time)}")
 
-    {:noreply, state}
+    :timer.sleep(:timer.seconds(state.virus.sick_time + state.virus.incubation_time))
+
+    new_population_health_status = collect_population_health_status(state.population)
+
+    new_state = %{
+      state
+      | population_health_status: new_population_health_status
+    }
+
+    IO.puts("")
+    IO.puts("-------------------")
+    IO.puts("Simulation finished")
+    IO.puts("Simulation time: #{inspect(simulation_time)}")
+    IO.puts("Health status: #{inspect(new_population_health_status)}")
+
+    {:noreply, new_state}
   end
 end

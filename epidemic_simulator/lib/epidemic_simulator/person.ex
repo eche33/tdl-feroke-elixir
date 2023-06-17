@@ -74,11 +74,11 @@ defmodule EpidemicSimulator.Person do
 
       new_state = case new_health_status do
                     :sick ->
-                      IO.puts("#{state.name}: I got sick")
                       if state.simulation_running do
                         convalescence_period(state.name, state.virus)
                         infect_neighbours(state.neighbours, state.virus)
                       end
+                      IO.puts("#{state.name}: I got sick")
                       %{state | health_status: :sick}
 
                     :immune ->

@@ -17,23 +17,8 @@ defmodule EpidemicSimulator.Adult do
   end
 
   @impl true
-  def handle_call(:is_sick, _, state) do
-    {:reply, state.health_status == :sick, state}
-  end
-
-  @impl true
-  def handle_call(:is_healthy, _, state) do
-    {:reply, state.health_status == :healthy, state}
-  end
-
-  @impl true
-  def handle_call(:is_dead, _, state) do
-    {:reply, state.health_status == :dead, state}
-  end
-
-  @impl true
-  def handle_call(:is_immune, _, state) do
-    {:reply, state.health_status == :immune, state}
+  def handle_call(:health_status, _, state) do
+    {:reply, state.health_status, state}
   end
 
   @impl true
@@ -43,11 +28,13 @@ defmodule EpidemicSimulator.Adult do
     {:noreply, new_state}
   end
 
+  @impl true
   def handle_cast(:stop_simulating, state) do
     new_state = %{state | simulation_running: false}
     {:noreply, new_state}
   end
 
+  @impl true
   def handle_cast(:start_simulating, state) do
     new_state = %{state | simulation_running: true}
 
@@ -59,6 +46,7 @@ defmodule EpidemicSimulator.Adult do
     {:noreply, new_state}
   end
 
+  @impl true
   def handle_cast(:ring, state) do
     Agent.stop(String.to_atom("#{state.name}_timer"))
 
