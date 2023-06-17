@@ -29,8 +29,8 @@ defmodule EpidemicSimulatorTest do
   test "create population successfully" do
     EpidemicSimulator.create_population(2, 2)
 
-    assert EpidemicSimulator.amount_of_sick_people() == 0
-    assert EpidemicSimulator.amount_of_healthy_people() == 4
+    assert EpidemicSimulator.amount_of(:sick) == 0
+    assert EpidemicSimulator.amount_of(:healthy) == 4
   end
 
   # Commented this tests since if it's a simulation we can't really predict what's going to happen

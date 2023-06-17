@@ -139,7 +139,7 @@ defmodule EpidemicSimulator do
     new_state = %{
       state
       | population: population,
-        population_health_status: %{:healthy => length(population)}
+        population_health_status: %{healthy: length(population), sick: 0, dead: 0, immune: 0}
     }
 
     {:reply, :ok, new_state}
