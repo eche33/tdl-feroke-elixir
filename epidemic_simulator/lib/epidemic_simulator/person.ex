@@ -16,6 +16,8 @@ defmodule EpidemicSimulator.Person do
       virus: nil
     }
 
+    GenServer.cast(MedicalCenter, {:census, initial_state.name, initial_state.pos, initial_state.health_status})
+
     initial_state
   end
 

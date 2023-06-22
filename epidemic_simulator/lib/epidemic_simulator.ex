@@ -106,6 +106,7 @@ defmodule EpidemicSimulator do
       raise "You need to create a population first"
     end
 
+    GenServer.cast(MedicalCenter, :ring)
     GenServer.cast(@me, {:simulate_virus, time})
   end
 
