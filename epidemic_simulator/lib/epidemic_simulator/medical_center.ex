@@ -2,30 +2,54 @@ defmodule EpidemicSimulator.MedicalCenter do
   use GenServer
 
   @me __MODULE__
+  def test() do
+    GenServer.cast(MedicalCenter, {:census, :Adult1, {1,1}, :healthy})
+    GenServer.cast(MedicalCenter, {:census, :Adult2, {2,2}, :incubating})
+    GenServer.cast(MedicalCenter, {:census, :Adult3, {3,3}, :sick})
+    GenServer.cast(MedicalCenter, {:census, :Adult4, {4,4}, :dead})
+    GenServer.cast(MedicalCenter, {:census, :Adult5, {5,5}, :inmune})
+    GenServer.cast(MedicalCenter, :ring)
 
-  def plot() do
+    GenServer.cast(MedicalCenter, {:census, :Adult1, {1,1}, :incubating})
+    GenServer.cast(MedicalCenter, {:census, :Adult2, {2,2}, :incubating})
+    GenServer.cast(MedicalCenter, {:census, :Adult3, {3,3}, :dead})
+    GenServer.cast(MedicalCenter, {:census, :Adult4, {4,4}, :dead})
+    GenServer.cast(MedicalCenter, {:census, :Adult5, {5,5}, :inmune})
+    GenServer.cast(MedicalCenter, :ring)
+
+    GenServer.cast(MedicalCenter, {:census, :Adult1, {1,1}, :incubating})
+    GenServer.cast(MedicalCenter, {:census, :Adult2, {2,2}, :dead})
+    GenServer.cast(MedicalCenter, {:census, :Adult3, {3,3}, :dead})
+    GenServer.cast(MedicalCenter, {:census, :Adult4, {4,4}, :dead})
+    GenServer.cast(MedicalCenter, {:census, :Adult5, {5,5}, :inmune})
+    GenServer.cast(MedicalCenter, :ring)
+
+    GenServer.cast(MedicalCenter, {:census, :Adult1, {1,1}, :inmune})
+    GenServer.cast(MedicalCenter, {:census, :Adult2, {2,2}, :dead})
+    GenServer.cast(MedicalCenter, {:census, :Adult3, {3,3}, :dead})
+    GenServer.cast(MedicalCenter, {:census, :Adult4, {4,4}, :dead})
+    GenServer.cast(MedicalCenter, {:census, :Adult5, {5,5}, :inmune})
+    GenServer.cast(MedicalCenter, :ring)
+
+  end
+
+  def plot(state) do
+    data = state.citizens |> Enum.map(fn {key, {x,y,health_status}} -> {x,y,key,"#{health_status}"}  end)
+    i = state.step
+
     # Creo la carpeta, si existe no hago nada
     folder = "./outs/"
     if not File.exists?(folder) do
       File.mkdir(folder)
     end
 
-    # Genero la data
-    actors = ["Child", "Adult"]
-    status = ["healthy", "incubating", "sick", "inmune", "dead"]
-
-    rand_uniform = fn a, b ->
-      :rand.uniform() * (b-a) + a
-    end
-
-    data = 1..300 |> Enum.map(fn _ -> {rand_uniform.(0,5), rand_uniform.(0,5), Enum.take_random(actors, 1)|>hd, Enum.take_random(status,1)|>hd} end)
-
     # Cuento los estados de la poblacion
     status_count = fn st, d ->
-      c = Enum.count(d, fn {x,y,a,s} -> s == st end)
+      c = Enum.count(d, fn {_,_,_,s} -> s == st end)
       "#{st}: #{c}"
     end
 
+    status = ["healthy", "incubating", "sick", "inmune", "dead"]
     report = status |> Enum.map(fn st -> status_count.(st, data) end)
 
     # Creo mi paleta de colores para colorear Adult y Child
@@ -50,7 +74,7 @@ defmodule EpidemicSimulator.MedicalCenter do
     {:safe, svg} = Contex.Plot.to_svg(plot)
 
     # Guardo la imagen
-    filename = "population_test.svg"
+    filename = "population_step=#{i}.svg"
     {:ok, file} = File.open("#{folder}#{filename}", [:write])
     IO.binwrite(file, svg)
     File.close(file)
@@ -63,15 +87,44 @@ defmodule EpidemicSimulator.MedicalCenter do
 
   @impl true
   def init(:ok) do
-    {:ok, []}
+    initial_state = %EpidemicSimulator.Structs.MedicalCenterInformation{
+      citizens: %{},
+      step: 0
+    }
+
+    {:ok, initial_state}
   end
 
   @impl true
-  def handle_cast({:start, time, name}, state) do
-    :timer.sleep(:timer.seconds(time))
+  def handle_cast({:census, name, position, health_status}, state) do
+    IO.puts("census")
+    {x, y} = position
 
-    GenServer.cast(name, :ring)
-    {:noreply, state}
+    updated_citizens = Map.put(state.citizens, name, {x, y, health_status})
+
+    IO.puts(inspect(updated_citizens))
+    new_state = %EpidemicSimulator.Structs.MedicalCenterInformation{
+      citizens: updated_citizens,
+      step: state.step
+    }
+
+    {:noreply, new_state}
+  end
+
+  @impl true
+  def handle_cast(:ring, state) do
+    IO.puts("ring")
+    #Agent.stop(String.to_atom("#{state.name}_timer"))
+
+    plot(state)
+
+    #Agent.start(String.to_atom("#{state.name}_timer"))
+    new_state = %EpidemicSimulator.Structs.MedicalCenterInformation{
+      citizens: state.citizens,
+      step: state.step + 1
+    }
+
+    {:noreply, new_state}
   end
 
 end
