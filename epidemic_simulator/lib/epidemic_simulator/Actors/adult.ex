@@ -2,16 +2,16 @@ defmodule EpidemicSimulator.Adult do
   use GenServer
   import EpidemicSimulator.Person
 
-  def start_link([name, neighbours]) do
-    GenServer.start_link(__MODULE__, [name, neighbours], name: name)
+  def start_link([name, pos, neighbours]) do
+    GenServer.start_link(__MODULE__, [name, pos, neighbours], name: name)
   end
 
   @impl true
-  def init([name, neighbours]) do
+  def init([name, pos, neighbours]) do
     contagion_resistance = 0.2
     comorbidities = 0.1
 
-    initial_state = initialize_person_with(name, neighbours, contagion_resistance, comorbidities)
+    initial_state = initialize_person_with(name, pos, neighbours, contagion_resistance, comorbidities)
 
     {:ok, initial_state}
   end

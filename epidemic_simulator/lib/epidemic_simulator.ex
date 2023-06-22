@@ -9,6 +9,56 @@ defmodule EpidemicSimulator do
     GenServer.start_link(@me, :ok, opts)
   end
 
+  def create_persons(my_atom, n) do
+    Enum.map(1..n, fn i ->
+      {String.to_atom("#{my_atom}#{i}"), my_atom}
+    end)
+  end
+
+  def rand_uniform(a,b) do
+    :rand.uniform() * (b-a) + a
+  end
+
+  def generate_space_positions(population, a, b) do
+    population |> Enum.map(fn {nombre, tipo} -> {nombre, tipo, {rand_uniform(a,b), rand_uniform(a,b)}} end)
+  end
+
+  def create_node(node) do
+    {name, my_atom, pos, neighbours} = node
+    actor = cond do
+      my_atom == :Child -> EpidemicSimulator.Child
+      my_atom == :Adult -> EpidemicSimulator.Adult
+    end
+
+    {:ok, _pid} =
+      DynamicSupervisor.start_child(
+        EpidemicSimulator.PopulationSupervisor,
+        {actor, [name, pos, neighbours]}
+      )
+  end
+
+  def distance({_, {x1, y1}}, {_, {x2, y2}}) do
+    :math.sqrt(:math.pow(x2 - x1, 2) + :math.pow(y2 - y1, 2))
+  end
+
+  def create_neig(population, node) do
+      {name, atom, point} = node
+      neighbors = population
+      |> Enum.filter(fn {other_name, _, _} -> other_name != name end)
+      |> Enum.map(fn {other_name, atom, p} -> {other_name, atom, p, distance({name, point}, {other_name, p})} end)
+      |> Enum.sort_by(fn {_, _, _, dist} -> dist end)
+      |> Enum.take(3)
+      |> Enum.map(fn {other_name, _, _, _} -> other_name end)
+
+      {name, atom, point, neighbors}
+  end
+
+  def generate_neig(population) do
+      population |> Enum.map(fn node -> create_neig(population, node) end)
+    end
+
+
+
   def create_population do
     IO.puts("How many adults do you want to create?")
     adults = IO.gets("") |> String.trim() |> String.to_integer()
@@ -68,20 +118,19 @@ defmodule EpidemicSimulator do
   end
 
   # private
-
-  defp create_child(name, neighbours) do
+  defp create_child(name, pos, neighbours) do
     {:ok, _pid} =
       DynamicSupervisor.start_child(
         EpidemicSimulator.PopulationSupervisor,
-        {EpidemicSimulator.Child, [name, neighbours]}
+        {EpidemicSimulator.Child, [name, pos, neighbours]}
       )
   end
 
-  defp create_adult(name, neighbours) do
+  defp create_adult(name, pos, neighbours) do
     {:ok, _pid} =
       DynamicSupervisor.start_child(
         EpidemicSimulator.PopulationSupervisor,
-        {EpidemicSimulator.Adult, [name, neighbours]}
+        {EpidemicSimulator.Adult, [name, pos, neighbours]}
       )
   end
 
@@ -111,31 +160,19 @@ defmodule EpidemicSimulator do
   end
 
   @impl true
-  def handle_call([:create_population, adults, children], _from, state) do
-    childs =
-      Enum.map(1..children, fn i ->
-        String.to_atom("Child#{i}")
-      end)
-
-    adults =
-      Enum.map(1..adults, fn i ->
-        String.to_atom("Adult#{i}")
-      end)
-
+  def handle_call([:create_population, adult_n, child_n], _from, state) do
+    # Creo mi poblacion
+    childs = create_persons(:Child, child_n)
+    adults = create_persons(:Adult, adult_n)
     population = childs ++ adults
 
-    IO.puts("Population: #{inspect(population)}")
+    # le asignamos a la poblacion las posiciones (x,y) entre a,b y asignamos sus vecinos más cercanos
+    population = population |> generate_space_positions(0, 5) |> generate_neig
 
-    # For each child, create a child actor
-    Enum.each(childs, fn child ->
-      create_child(child, population)
-    end)
+    # Lanzo mis nodos poblacion
+    population |> Enum.map(fn node -> create_node(node) end)
 
-    # For each adult, create a adult actor
-    Enum.each(adults, fn adult ->
-      create_adult(adult, population)
-    end)
-
+    # Guardo el estado
     new_state = %{
       state
       | population: population,
@@ -143,6 +180,7 @@ defmodule EpidemicSimulator do
     }
 
     {:reply, :ok, new_state}
+
   end
 
   @impl true
@@ -179,7 +217,7 @@ defmodule EpidemicSimulator do
 
   @impl true
   def handle_cast({:simulate_virus, time}, state) do
-    Enum.each(state.population, fn person ->
+    Enum.each(state.population, fn {person, ...} ->
       GenServer.cast(person, :start_simulating)
     end)
 

@@ -1,12 +1,13 @@
 defmodule EpidemicSimulator.Person do
 
-  def initialize_person_with(name, neighbours, contagion_resistance, comorbidities) do
+  def initialize_person_with(name, pos, neighbours, contagion_resistance, comorbidities) do
     neighbours_without_me = List.delete(neighbours, name)
-    IO.puts("I'm #{inspect(name)}")
+    IO.puts("I'm #{inspect(name)} #{inspect(pos)}")
     IO.puts("#{name}: my neighnours are #{inspect(neighbours_without_me)}")
 
     initial_state = %EpidemicSimulator.Structs.CitizenInformation{
       name: name,
+      pos: pos,
       neighbours: neighbours_without_me,
       health_status: :healthy,
       contagion_resistance: contagion_resistance,
