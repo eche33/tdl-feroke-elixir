@@ -118,22 +118,6 @@ defmodule EpidemicSimulator do
   end
 
   # private
-  defp create_child(name, pos, neighbours) do
-    {:ok, _pid} =
-      DynamicSupervisor.start_child(
-        EpidemicSimulator.PopulationSupervisor,
-        {EpidemicSimulator.Child, [name, pos, neighbours]}
-      )
-  end
-
-  defp create_adult(name, pos, neighbours) do
-    {:ok, _pid} =
-      DynamicSupervisor.start_child(
-        EpidemicSimulator.PopulationSupervisor,
-        {EpidemicSimulator.Adult, [name, pos, neighbours]}
-      )
-  end
-
   defp collect_population_health_status(population) do
     Enum.reduce(population, %{}, fn person, acc ->
       health_status = GenServer.call(person, :health_status)
@@ -173,10 +157,11 @@ defmodule EpidemicSimulator do
     population |> Enum.map(fn node -> create_node(node) end)
 
     # Guardo el estado
+    population_name = population |> Enum.map(fn {nombre,_,_,_} -> nombre end)
     new_state = %{
       state
-      | population: population,
-        population_health_status: %{healthy: length(population), sick: 0, dead: 0, immune: 0}
+      | population: population_name,
+        population_health_status: %{healthy: length(population_name), sick: 0, dead: 0, immune: 0}
     }
 
     {:reply, :ok, new_state}
@@ -217,7 +202,7 @@ defmodule EpidemicSimulator do
 
   @impl true
   def handle_cast({:simulate_virus, time}, state) do
-    Enum.each(state.population, fn {person, ...} ->
+    Enum.each(state.population, fn person ->
       GenServer.cast(person, :start_simulating)
     end)
 
