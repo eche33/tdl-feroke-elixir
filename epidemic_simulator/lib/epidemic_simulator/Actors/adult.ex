@@ -11,7 +11,8 @@ defmodule EpidemicSimulator.Adult do
     contagion_resistance = 0.2
     comorbidities = 0.1
 
-    initial_state = initialize_person_with(name, pos, neighbours, contagion_resistance, comorbidities)
+    initial_state =
+      initialize_person_with(name, pos, neighbours, contagion_resistance, comorbidities)
 
     {:ok, initial_state}
   end
@@ -50,11 +51,11 @@ defmodule EpidemicSimulator.Adult do
   def handle_cast(:ring, state) do
     Agent.stop(String.to_atom("#{state.name}_timer"))
 
-    new_health_status = get_next_health_status(state.health_status, state.virus, state.comorbidities)
+    new_health_status =
+      get_next_health_status(state.health_status, state.virus, state.comorbidities)
 
     new_state = act_based_on_new_health_status(new_health_status, state)
 
     {:noreply, new_state}
   end
-
 end

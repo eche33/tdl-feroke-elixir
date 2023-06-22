@@ -15,20 +15,23 @@ defmodule EpidemicSimulator do
     end)
   end
 
-  def rand_uniform(a,b) do
-    :rand.uniform() * (b-a) + a
+  def rand_uniform(a, b) do
+    :rand.uniform() * (b - a) + a
   end
 
   def generate_space_positions(population, a, b) do
-    population |> Enum.map(fn {nombre, tipo} -> {nombre, tipo, {rand_uniform(a,b), rand_uniform(a,b)}} end)
+    population
+    |> Enum.map(fn {nombre, tipo} -> {nombre, tipo, {rand_uniform(a, b), rand_uniform(a, b)}} end)
   end
 
   def create_node(node) do
     {name, my_atom, pos, neighbours} = node
-    actor = cond do
-      my_atom == :Child -> EpidemicSimulator.Child
-      my_atom == :Adult -> EpidemicSimulator.Adult
-    end
+
+    actor =
+      cond do
+        my_atom == :Child -> EpidemicSimulator.Child
+        my_atom == :Adult -> EpidemicSimulator.Adult
+      end
 
     {:ok, _pid} =
       DynamicSupervisor.start_child(
@@ -42,22 +45,24 @@ defmodule EpidemicSimulator do
   end
 
   def create_neig(population, node) do
-      {name, atom, point} = node
-      neighbors = population
+    {name, atom, point} = node
+
+    neighbors =
+      population
       |> Enum.filter(fn {other_name, _, _} -> other_name != name end)
-      |> Enum.map(fn {other_name, atom, p} -> {other_name, atom, p, distance({name, point}, {other_name, p})} end)
+      |> Enum.map(fn {other_name, atom, p} ->
+        {other_name, atom, p, distance({name, point}, {other_name, p})}
+      end)
       |> Enum.sort_by(fn {_, _, _, dist} -> dist end)
-      |> Enum.take(3)
+      |> Enum.filter(fn {_, _, _, distance} -> distance < 1 end)
       |> Enum.map(fn {other_name, _, _, _} -> other_name end)
 
-      {name, atom, point, neighbors}
+    {name, atom, point, neighbors}
   end
 
   def generate_neig(population) do
-      population |> Enum.map(fn node -> create_neig(population, node) end)
-    end
-
-
+    population |> Enum.map(fn node -> create_neig(population, node) end)
+  end
 
   def create_population do
     IO.puts("How many adults do you want to create?")
@@ -122,14 +127,19 @@ defmodule EpidemicSimulator do
   defp collect_population_health_status(population) do
     Enum.reduce(population, %{}, fn person, acc ->
       health_status = GenServer.call(person, :health_status)
-      Map.update(acc, health_status, 1, & &1 + 1)
+      Map.update(acc, health_status, 1, &(&1 + 1))
     end)
   end
 
   @impl true
   def init(:ok) do
     population_health_status = %{:healthy => 0, :sick => 0, :dead => 0, :immune => 0}
-    initial_state = %@me{population: [], population_health_status: population_health_status, virus: nil}
+
+    initial_state = %@me{
+      population: [],
+      population_health_status: population_health_status,
+      virus: nil
+    }
 
     {:ok, initial_state}
   end
@@ -158,7 +168,8 @@ defmodule EpidemicSimulator do
     population |> Enum.map(fn node -> create_node(node) end)
 
     # Guardo el estado
-    population_name = population |> Enum.map(fn {nombre,_,_,_} -> nombre end)
+    population_name = population |> Enum.map(fn {nombre, _, _, _} -> nombre end)
+
     new_state = %{
       state
       | population: population_name,
@@ -166,7 +177,6 @@ defmodule EpidemicSimulator do
     }
 
     {:reply, :ok, new_state}
-
   end
 
   @impl true
@@ -207,7 +217,7 @@ defmodule EpidemicSimulator do
       GenServer.cast(person, :start_simulating)
     end)
 
-    timer_identifier =  String.to_atom("#{@me}_timer")
+    timer_identifier = String.to_atom("#{@me}_timer")
     EpidemicSimulator.Timer.start_timer(timer_identifier, @me, time)
 
     first_infected_person = Enum.random(state.population)
@@ -239,6 +249,8 @@ defmodule EpidemicSimulator do
       state
       | population_health_status: new_population_health_status
     }
+
+    GenServer.cast(MedicalCenter, :ring)
 
     IO.puts("")
     IO.puts("-------------------")

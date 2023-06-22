@@ -1,5 +1,4 @@
 defmodule EpidemicSimulator.Person do
-
   def initialize_person_with(name, pos, neighbours, contagion_resistance, comorbidities) do
     neighbours_without_me = List.delete(neighbours, name)
     IO.puts("I'm #{inspect(name)} #{inspect(pos)}")
@@ -16,7 +15,10 @@ defmodule EpidemicSimulator.Person do
       virus: nil
     }
 
-    GenServer.cast(MedicalCenter, {:census, initial_state.name, initial_state.pos, initial_state.health_status})
+    GenServer.cast(
+      MedicalCenter,
+      {:census, initial_state.name, initial_state.pos, initial_state.health_status}
+    )
 
     initial_state
   end
@@ -39,6 +41,8 @@ defmodule EpidemicSimulator.Person do
         state.health_status
       end
 
+    GenServer.cast(MedicalCenter, {:census, state.name, state.pos, new_health_status})
+
     %{state | health_status: new_health_status, virus: virus}
   end
 
@@ -53,7 +57,7 @@ defmodule EpidemicSimulator.Person do
 
   def convalescence_period(name, virus) do
     sick_time = virus.sick_time
-    timer_identifier =  String.to_atom("#{name}_timer")
+    timer_identifier = String.to_atom("#{name}_timer")
     EpidemicSimulator.Timer.start_timer(timer_identifier, name, sick_time)
   end
 
@@ -74,26 +78,29 @@ defmodule EpidemicSimulator.Person do
   end
 
   def act_based_on_new_health_status(new_health_status, state) do
+    GenServer.cast(MedicalCenter, {:census, state.name, state.pos, new_health_status})
 
-      new_state = case new_health_status do
-                    :sick ->
-                      if state.simulation_running do
-                        convalescence_period(state.name, state.virus)
-                        infect_neighbours(state.neighbours, state.virus)
-                      end
-                      IO.puts("#{state.name}: I got sick")
-                      %{state | health_status: :sick}
+    new_state =
+      case new_health_status do
+        :sick ->
+          if state.simulation_running do
+            convalescence_period(state.name, state.virus)
+            infect_neighbours(state.neighbours, state.virus)
+          end
 
-                    :immune ->
-                      IO.puts("#{state.name}: I'm immune now!")
-                      %{state | health_status: :immune}
+          IO.puts("#{state.name}: I got sick")
+          %{state | health_status: :sick}
 
-                    :dead ->
-                      IO.puts("#{state.name}: I died :(")
-                      %{state | health_status: :dead}
-                  end
+        :immune ->
+          IO.puts("#{state.name}: I'm immune now!")
+          %{state | health_status: :immune}
 
-      new_state
+        :dead ->
+          IO.puts("#{state.name}: I died :(")
+          %{state | health_status: :dead}
+      end
+
+    new_state
   end
 
   defp virus_kills_person?(lethality, comorbidities) do
@@ -101,7 +108,7 @@ defmodule EpidemicSimulator.Person do
   end
 
   defp start_incubating_virus(incubation_time, name) do
-    timer_identifier =  String.to_atom("#{name}_timer")
+    timer_identifier = String.to_atom("#{name}_timer")
     EpidemicSimulator.Timer.start_timer(timer_identifier, name, incubation_time)
   end
 
