@@ -2,16 +2,17 @@ defmodule EpidemicSimulator.Child do
   use GenServer
   import EpidemicSimulator.Person
 
-  def start_link([name, neighbours]) do
-    GenServer.start_link(__MODULE__, [name, neighbours], name: name)
+  def start_link([name, pos, neighbours]) do
+    GenServer.start_link(__MODULE__, [name, pos, neighbours], name: name)
   end
 
   @impl true
-  def init([name, neighbours]) do
+  def init([name, pos, neighbours]) do
     contagion_resistance = 0.1
     comorbidities = -0.03
 
-    initial_state = initialize_person_with(name, neighbours, contagion_resistance, comorbidities)
+    initial_state =
+      initialize_person_with(name, pos, neighbours, contagion_resistance, comorbidities)
 
     {:ok, initial_state}
   end
@@ -50,11 +51,11 @@ defmodule EpidemicSimulator.Child do
   def handle_cast(:ring, state) do
     Agent.stop(String.to_atom("#{state.name}_timer"))
 
-    new_health_status = get_next_health_status(state.health_status, state.virus, state.comorbidities)
+    new_health_status =
+      get_next_health_status(state.health_status, state.virus, state.comorbidities)
 
     new_state = act_based_on_new_health_status(new_health_status, state)
 
     {:noreply, new_state}
   end
-
 end

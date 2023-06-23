@@ -1,0 +1,5 @@
+%{
+  "contex": {:git, "https://github.com/mindok/contex.git", "0f6abe3fc679e6fc540ebfb99defb0727136e17b", []},
+  "dep_from_git": {:git, "https://github.com/mindok/contex.git", "0f6abe3fc679e6fc540ebfb99defb0727136e17b", []},
+  "nimble_strftime": {:hex, :nimble_strftime, "0.1.1", "b988184d1bd945bc139b2c27dd00a6c0774ec94f6b0b580083abd62d5d07818b", [:mix], [], "hexpm", "89e599c9b8b4d1203b7bb5c79eb51ef7c6a28fbc6228230b312f8b796310d755"},
+}

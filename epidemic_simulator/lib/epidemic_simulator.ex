@@ -20,10 +20,6 @@ defmodule EpidemicSimulator do
     create_population(adults, children)
   end
 
-  def create_population(adults, childs) do
-    GenServer.call(@me, [:create_population, adults, childs])
-  end
-
   def create_virus do
     IO.puts("Insert the virality:")
     virality = IO.gets("") |> String.trim() |> String.to_integer()
@@ -34,28 +30,23 @@ defmodule EpidemicSimulator do
     IO.puts("Insert sick time (in seconds):")
     sick_time = IO.gets("") |> String.trim() |> String.to_integer()
 
-    IO.puts("Insert lethality (number between 0 and 1):")
-    lethality = IO.gets("") |> String.trim() |> String.to_float()
+    IO.puts("Insert lethality (percentage between 0 and 100):")
+    lethality_percentage = IO.gets("") |> String.trim() |> String.to_integer()
+    lethality = lethality_percentage / 100
 
     create_virus(virality, incubation_time, sick_time, lethality)
   end
 
-  def create_virus(virality, incubation_time, sick_time, lethality) do
-    GenServer.call(@me, [:create_virus, virality, incubation_time, sick_time, lethality])
-  end
-
   def simulate_virus(time) do
-    population = GenServer.call(@me, :population)
-    virus = GenServer.call(@me, :virus)
-
-    if virus == nil do
+    if GenServer.call(@me, :has_virus) do
       raise "You need to create a virus first"
     end
 
-    if population == [] do
+    if GenServer.call(@me, :has_population) do
       raise "You need to create a population first"
     end
 
+    GenServer.cast(MedicalCenter, :plot)
     GenServer.cast(@me, {:simulate_virus, time})
   end
 
@@ -63,83 +54,53 @@ defmodule EpidemicSimulator do
     GenServer.call(@me, {:amount_of, health_status})
   end
 
-  def stop_simulation() do
-    GenServer.cast(@me, :stop_simulation)
+  def create_population(adults, childs) do
+    GenServer.call(@me, [:create_population, adults, childs])
   end
 
-  # private
-
-  defp create_child(name, neighbours) do
-    {:ok, _pid} =
-      DynamicSupervisor.start_child(
-        EpidemicSimulator.PopulationSupervisor,
-        {EpidemicSimulator.Child, [name, neighbours]}
-      )
-  end
-
-  defp create_adult(name, neighbours) do
-    {:ok, _pid} =
-      DynamicSupervisor.start_child(
-        EpidemicSimulator.PopulationSupervisor,
-        {EpidemicSimulator.Adult, [name, neighbours]}
-      )
-  end
-
-  defp collect_population_health_status(population) do
-    Enum.reduce(population, %{}, fn person, acc ->
-      health_status = GenServer.call(person, :health_status)
-      Map.update(acc, health_status, 1, & &1 + 1)
-    end)
+  def create_virus(virality, incubation_time, sick_time, lethality) do
+    GenServer.call(@me, [:create_virus, virality, incubation_time, sick_time, lethality])
   end
 
   @impl true
   def init(:ok) do
     population_health_status = %{:healthy => 0, :sick => 0, :dead => 0, :immune => 0}
-    initial_state = %@me{population: [], population_health_status: population_health_status, virus: nil}
+
+    initial_state = %@me{
+      population: [],
+      population_health_status: population_health_status,
+      virus: nil
+    }
 
     {:ok, initial_state}
   end
 
   @impl true
-  def handle_call(:population, _, state) do
-    {:reply, state.population, state}
+  def handle_call(:has_population, _, state) do
+    {:reply, state.population == [], state}
   end
 
   @impl true
-  def handle_call(:virus, _, state) do
-    {:reply, state.virus, state}
+  def handle_call(:has_virus, _, state) do
+    {:reply, state.virus == nil, state}
   end
 
   @impl true
-  def handle_call([:create_population, adults, children], _from, state) do
-    childs =
-      Enum.map(1..children, fn i ->
-        String.to_atom("Child#{i}")
-      end)
+  def handle_call([:create_population, adults, childs], _from, state) do
+    childs = create_person_names(:Child, childs)
+    adults = create_person_names(:Adult, adults)
+    population_names = childs ++ adults
 
-    adults =
-      Enum.map(1..adults, fn i ->
-        String.to_atom("Adult#{i}")
-      end)
+    population = population_names |> assign_random_space_positions |> find_neighbours
 
-    population = childs ++ adults
+    population |> Enum.map(fn person_info -> create_person(person_info) end)
 
-    IO.puts("Population: #{inspect(population)}")
-
-    # For each child, create a child actor
-    Enum.each(childs, fn child ->
-      create_child(child, population)
-    end)
-
-    # For each adult, create a adult actor
-    Enum.each(adults, fn adult ->
-      create_adult(adult, population)
-    end)
+    population_name = population |> Enum.map(fn {nombre, _, _, _} -> nombre end)
 
     new_state = %{
       state
-      | population: population,
-        population_health_status: %{healthy: length(population), sick: 0, dead: 0, immune: 0}
+      | population: population_name,
+        population_health_status: %{healthy: length(population_name), sick: 0, dead: 0, immune: 0}
     }
 
     {:reply, :ok, new_state}
@@ -183,7 +144,7 @@ defmodule EpidemicSimulator do
       GenServer.cast(person, :start_simulating)
     end)
 
-    timer_identifier =  String.to_atom("#{@me}_timer")
+    timer_identifier = String.to_atom("#{@me}_timer")
     EpidemicSimulator.Timer.start_timer(timer_identifier, @me, time)
 
     first_infected_person = Enum.random(state.population)
@@ -209,19 +170,66 @@ defmodule EpidemicSimulator do
 
     :timer.sleep(:timer.seconds(state.virus.sick_time + state.virus.incubation_time))
 
-    new_population_health_status = collect_population_health_status(state.population)
-
-    new_state = %{
-      state
-      | population_health_status: new_population_health_status
-    }
+    GenServer.cast(MedicalCenter, :plot)
 
     IO.puts("")
     IO.puts("-------------------")
     IO.puts("Simulation finished")
     IO.puts("Simulation time: #{inspect(simulation_time)}")
-    IO.puts("Health status: #{inspect(new_population_health_status)}")
 
-    {:noreply, new_state}
+    {:noreply, state}
+  end
+
+  defp assign_random_space_positions(population) do
+    random_between = fn (min_value, max_value) -> :rand.uniform() * (max_value - min_value) + min_value end
+
+    population
+    |> Enum.map(fn {nombre, tipo} -> {nombre, tipo, {random_between.(0, 5), random_between.(0, 5)}} end)
+  end
+
+  defp find_neighbours(population) do
+    population |> Enum.map(fn person -> find_closest_persons_to(population, person) end)
+  end
+
+  defp find_closest_persons_to(population, a_person) do
+    {name, person_type, position} = a_person
+
+    neighbours =
+      population
+      |> Enum.filter(fn {other_name, _, _} -> other_name != name end)
+      |> Enum.map(fn {other_name, other_person_type, other_position} ->
+        {other_name, other_person_type, other_position, distance({name, position}, {other_name, other_position})}
+      end)
+      |> Enum.sort_by(fn {_, _, _, distance} -> distance end)
+      |> Enum.filter(fn {_, _, _, distance} -> distance < 1 end)
+      |> Enum.map(fn {other_name, _, _, _} -> other_name end)
+
+    {name, person_type, position, neighbours}
+  end
+
+  defp distance({_, {x1, y1}}, {_, {x2, y2}}) do
+    :math.sqrt(:math.pow(x2 - x1, 2) + :math.pow(y2 - y1, 2))
+  end
+
+  defp create_person_names(person_type, amount) do
+    Enum.map(1..amount, fn i ->
+      {String.to_atom("#{person_type}#{i}"), person_type}
+    end)
+  end
+
+  defp create_person(person_information) do
+    {name, person_type, pos, neighbours} = person_information
+
+    actor =
+      cond do
+        person_type == :Child -> EpidemicSimulator.Child
+        person_type == :Adult -> EpidemicSimulator.Adult
+      end
+
+    {:ok, _pid} =
+      DynamicSupervisor.start_child(
+        EpidemicSimulator.PopulationSupervisor,
+        {actor, [name, pos, neighbours]}
+      )
   end
 end
