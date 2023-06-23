@@ -41,6 +41,18 @@ defmodule EpidemicSimulator.MedicalCenter do
 
   @impl true
   def handle_cast(:plot, state) do
+    plot(state.citizens, state.step)
+
+    new_state = %EpidemicSimulator.Structs.MedicalCenterInformation{
+      citizens: state.citizens,
+      step: state.step + 1
+    }
+
+    {:noreply, new_state}
+  end
+
+  @impl true
+  def handle_cast(:ring, state) do
     ## Le pusimos plot porque por ahora no lo llamaba un timer y entonces no tenía sentido el ring
     ## Básicamente habría que llamar a este método la primera vez desde epidemic simulator (ya se hace)
 
@@ -50,7 +62,17 @@ defmodule EpidemicSimulator.MedicalCenter do
     # timer_identifier = String.to_atom("#{@me}_timer")
     # EpidemicSimulator.Timer.start_timer(timer_identifier, @me, sick_time)
 
+    timer_name = "MedicalCenter_timer"
+    #timer_name = String.to_atom("MedicalCenter_timer")
+    timer_period = 1
+
+    # stop timer
+    Agent.stop(String.to_atom(timer_name))
+
     plot(state.citizens, state.step)
+
+    # start timer
+    EpidemicSimulator.Timer.start_timer(timer_name, @me, timer_period)
 
     new_state = %EpidemicSimulator.Structs.MedicalCenterInformation{
       citizens: state.citizens,

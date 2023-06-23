@@ -46,7 +46,14 @@ defmodule EpidemicSimulator do
       raise "You need to create a population first"
     end
 
+    # Ploteo la situación inicial
     GenServer.cast(MedicalCenter, :plot)
+
+    # Inicio la secuencia de ploteo - se puede juntar con situacion inicial
+    timer_name = String.to_atom("MedicalCenter_timer")
+    timer_period = 1
+    EpidemicSimulator.Timer.start_timer(timer_name, MedicalCenter, timer_period)
+
     GenServer.cast(@me, {:simulate_virus, time})
   end
 
@@ -170,7 +177,13 @@ defmodule EpidemicSimulator do
 
     :timer.sleep(:timer.seconds(state.virus.sick_time + state.virus.incubation_time))
 
+    # Plotea el estado final
     GenServer.cast(MedicalCenter, :plot)
+
+    # Termina el timer - se junta con plot de estado final
+    timer_name = "MedicalCenter_timer"
+    #timer_name = String.to_atom("MedicalCenter_timer")
+    Agent.stop(String.to_atom(timer_name))
 
     IO.puts("")
     IO.puts("-------------------")
