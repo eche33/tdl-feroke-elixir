@@ -89,8 +89,9 @@ defmodule EpidemicSimulator do
     IO.puts("Insert sick time (in seconds):")
     sick_time = IO.gets("") |> String.trim() |> String.to_integer()
 
-    IO.puts("Insert lethality (number between 0 and 1):")
-    lethality = IO.gets("") |> String.trim() |> String.to_float()
+    IO.puts("Insert lethality (percentage between 0 and 100):")
+    lethality_percentage = IO.gets("") |> String.trim() |> String.to_integer()
+    lethality = lethality_percentage / 100
 
     create_virus(virality, incubation_time, sick_time, lethality)
   end
