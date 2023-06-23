@@ -45,7 +45,7 @@ defmodule EpidemicSimulator.MedicalCenter do
     ## Básicamente habría que llamar a este método la primera vez desde epidemic simulator (ya se hace)
 
     # Con esto llamás al timer y le decís el tiempo. Habría que tener algo en el state que marque el final para no plotear infinitamente
-    # si hay que seguir llamando al timer o no. Ese estado lo podría cambiar el epidemic simulator cuando se terminó la simulación
+    # Ese estado lo podría cambiar el epidemic simulator cuando se terminó la simulación
     # time = 1
     # timer_identifier = String.to_atom("#{@me}_timer")
     # EpidemicSimulator.Timer.start_timer(timer_identifier, @me, sick_time)
