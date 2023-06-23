@@ -49,10 +49,13 @@ defmodule EpidemicSimulator.Person do
   def infect_neighbours(neighbours, virus) do
     amount_of_neighbours_to_infect = virus.virality
 
-    Enum.each(1..amount_of_neighbours_to_infect, fn _ ->
-      neighbour_to_infect = Enum.random(neighbours)
-      GenServer.cast(neighbour_to_infect, {:infect, virus})
-    end)
+    if length(neighbours) > 0 do
+      Enum.each(1..amount_of_neighbours_to_infect, fn _ ->
+        neighbour_to_infect = Enum.random(neighbours)
+        GenServer.cast(neighbour_to_infect, {:infect, virus})
+      end)
+    end
+
   end
 
   def convalescence_period(name, virus) do
