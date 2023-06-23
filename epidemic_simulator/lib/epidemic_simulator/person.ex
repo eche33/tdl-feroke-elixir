@@ -49,10 +49,13 @@ defmodule EpidemicSimulator.Person do
   def infect_neighbours(neighbours, virus) do
     amount_of_neighbours_to_infect = virus.virality
 
-    Enum.each(1..amount_of_neighbours_to_infect, fn _ ->
-      neighbour_to_infect = Enum.random(neighbours)
-      GenServer.cast(neighbour_to_infect, {:infect, virus})
-    end)
+    if length(neighbours) > 0 do
+      Enum.each(1..amount_of_neighbours_to_infect, fn _ ->
+        neighbour_to_infect = Enum.random(neighbours)
+        GenServer.cast(neighbour_to_infect, {:infect, virus})
+      end)
+    end
+
   end
 
   def convalescence_period(name, virus) do
@@ -78,29 +81,35 @@ defmodule EpidemicSimulator.Person do
   end
 
   def act_based_on_new_health_status(new_health_status, state) do
-    GenServer.cast(MedicalCenter, {:census, state.name, state.pos, new_health_status})
 
-    new_state =
-      case new_health_status do
-        :sick ->
-          if state.simulation_running do
-            convalescence_period(state.name, state.virus)
-            infect_neighbours(state.neighbours, state.virus)
-          end
+    if state.simulation_running do
+      GenServer.cast(MedicalCenter, {:census, state.name, state.pos, new_health_status})
 
-          IO.puts("#{state.name}: I got sick")
-          %{state | health_status: :sick}
+      new_state =
+        case new_health_status do
+          :sick ->
+            if state.simulation_running do
+              convalescence_period(state.name, state.virus)
+              infect_neighbours(state.neighbours, state.virus)
+            end
 
-        :immune ->
-          IO.puts("#{state.name}: I'm immune now!")
-          %{state | health_status: :immune}
+            IO.puts("#{state.name}: I got sick")
+            %{state | health_status: :sick}
 
-        :dead ->
-          IO.puts("#{state.name}: I died :(")
-          %{state | health_status: :dead}
-      end
+          :immune ->
+            IO.puts("#{state.name}: I'm immune now!")
+            %{state | health_status: :immune}
 
-    new_state
+          :dead ->
+            IO.puts("#{state.name}: I died :(")
+            %{state | health_status: :dead}
+        end
+
+      new_state
+    else
+      state
+    end
+
   end
 
   defp virus_kills_person?(lethality, comorbidities) do

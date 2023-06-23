@@ -50,9 +50,7 @@ defmodule EpidemicSimulator do
     GenServer.cast(MedicalCenter, :plot)
 
     # Inicio la secuencia de ploteo - se puede juntar con situacion inicial
-    timer_name = String.to_atom("MedicalCenter_timer")
-    timer_period = 1
-    EpidemicSimulator.Timer.start_timer(timer_name, MedicalCenter, timer_period)
+    GenServer.cast(MedicalCenter, :start_census)
 
     GenServer.cast(@me, {:simulate_virus, time})
   end
@@ -175,20 +173,19 @@ defmodule EpidemicSimulator do
 
     simulation_time = DateTime.diff(DateTime.utc_now(), state.simulation_start_datetime)
 
-    :timer.sleep(:timer.seconds(state.virus.sick_time + state.virus.incubation_time))
-
     # Plotea el estado final
     GenServer.cast(MedicalCenter, :plot)
 
     # Termina el timer - se junta con plot de estado final
-    timer_name = "MedicalCenter_timer"
-    #timer_name = String.to_atom("MedicalCenter_timer")
-    Agent.stop(String.to_atom(timer_name))
+    GenServer.cast(MedicalCenter, :stop_census)
+
+    population_health_status = GenServer.call(MedicalCenter, :population_health_status)
 
     IO.puts("")
     IO.puts("-------------------")
     IO.puts("Simulation finished")
     IO.puts("Simulation time: #{inspect(simulation_time)}")
+    IO.puts("Population status: #{inspect(population_health_status)}")
 
     {:noreply, state}
   end
