@@ -20,7 +20,8 @@ defmodule EpidemicSimulator.MedicalCenter do
   def init(:ok) do
     initial_state = %EpidemicSimulator.Structs.MedicalCenterInformation{
       citizens: %{},
-      step: 0
+      step: 0,
+      simulation_running: true
     }
 
     {:ok, initial_state}
@@ -32,10 +33,7 @@ defmodule EpidemicSimulator.MedicalCenter do
 
     updated_citizens = Map.put(state.citizens, name, {x, y, health_status})
 
-    new_state = %EpidemicSimulator.Structs.MedicalCenterInformation{
-      citizens: updated_citizens,
-      step: state.step
-    }
+    new_state = %{state | citizens: updated_citizens}
 
     {:noreply, new_state}
   end
@@ -44,10 +42,8 @@ defmodule EpidemicSimulator.MedicalCenter do
   def handle_cast(:plot, state) do
     plot(state.citizens, state.step)
 
-    new_state = %EpidemicSimulator.Structs.MedicalCenterInformation{
-      citizens: state.citizens,
-      step: state.step + 1
-    }
+    next_step = state.step + 1
+    new_state = %{state | step: next_step}
 
     {:noreply, new_state}
   end
@@ -74,13 +70,12 @@ defmodule EpidemicSimulator.MedicalCenter do
 
     plot(state.citizens, state.step)
 
-    # start timer
-    EpidemicSimulator.Timer.start_timer(timer_name, MedicalCenter, timer_period)
+    if state.simulation_running do
+      EpidemicSimulator.Timer.start_timer(timer_name, MedicalCenter, timer_period)
+    end
 
-    new_state = %EpidemicSimulator.Structs.MedicalCenterInformation{
-      citizens: state.citizens,
-      step: state.step + 1
-    }
+    next_step = state.step + 1
+    new_state = %{state | step: next_step}
 
     {:noreply, new_state}
   end
@@ -98,12 +93,9 @@ defmodule EpidemicSimulator.MedicalCenter do
 
   @impl true
   def handle_cast(:stop_census, state) do
-    # Termina el timer - se junta con plot de estado final
-    timer_name = "MedicalCenter_timer"
-    Agent.stop(String.to_atom(timer_name))
+    new_state = %{state | simulation_running: false}
 
-    {:noreply, state}
-
+    {:noreply, new_state}
   end
 
   @impl true
