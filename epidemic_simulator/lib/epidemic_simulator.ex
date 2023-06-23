@@ -170,10 +170,13 @@ defmodule EpidemicSimulator do
 
     GenServer.cast(MedicalCenter, :plot)
 
+    population_health_status = GenServer.call(MedicalCenter, :population_health_status)
+
     IO.puts("")
     IO.puts("-------------------")
     IO.puts("Simulation finished")
     IO.puts("Simulation time: #{inspect(simulation_time)}")
+    IO.puts("Population status: #{inspect(population_health_status)}")
 
     {:noreply, state}
   end

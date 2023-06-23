@@ -50,4 +50,17 @@ defmodule EpidemicSimulator.MedicalCenter do
 
     {:noreply, new_state}
   end
+
+  @impl true
+  def handle_call(:population_health_status, _from, state) do
+    population_health_status =
+      state.citizens
+      |> Map.values()
+      |> Enum.map(fn {_, _, health_status} -> health_status end)
+      |> Enum.group_by(fn health_status -> health_status end)
+      |> Enum.map(fn {health_status, list} -> {health_status, length(list)} end)
+      |> Enum.into(%{})
+
+    {:reply, population_health_status, state}
+  end
 end
