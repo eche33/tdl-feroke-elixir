@@ -54,11 +54,11 @@ defmodule EpidemicSimulator do
     GenServer.call(@me, {:amount_of, health_status})
   end
 
-  defp create_population(adults, childs) do
+  def create_population(adults, childs) do
     GenServer.call(@me, [:create_population, adults, childs])
   end
 
-  defp create_virus(virality, incubation_time, sick_time, lethality) do
+  def create_virus(virality, incubation_time, sick_time, lethality) do
     GenServer.call(@me, [:create_virus, virality, incubation_time, sick_time, lethality])
   end
 
