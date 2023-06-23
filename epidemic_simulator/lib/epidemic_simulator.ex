@@ -168,8 +168,6 @@ defmodule EpidemicSimulator do
 
     simulation_time = DateTime.diff(DateTime.utc_now(), state.simulation_start_datetime)
 
-    :timer.sleep(:timer.seconds(state.virus.sick_time + state.virus.incubation_time))
-
     GenServer.cast(MedicalCenter, :plot)
 
     IO.puts("")
