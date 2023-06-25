@@ -46,10 +46,6 @@ defmodule EpidemicSimulator do
       raise "You need to create a population first"
     end
 
-    # Ploteo la situación inicial
-    GenServer.cast(MedicalCenter, :plot)
-
-    # Inicio la secuencia de ploteo - se puede juntar con situacion inicial
     GenServer.cast(MedicalCenter, :start_census)
 
     GenServer.cast(@me, {:simulate_virus, time})

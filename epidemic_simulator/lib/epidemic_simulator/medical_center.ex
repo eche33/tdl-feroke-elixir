@@ -93,10 +93,11 @@ defmodule EpidemicSimulator.MedicalCenter do
 
   @impl true
   def handle_cast(:start_census, state) do
+    new_state = plot_and_increment_step(state)
+
     start_medical_center_timer()
 
-    {:noreply, state}
-
+    {:noreply, new_state}
   end
 
   @impl true
