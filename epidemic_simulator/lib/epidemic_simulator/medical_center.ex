@@ -16,6 +16,14 @@ defmodule EpidemicSimulator.MedicalCenter do
     EpidemicSimulator.PopulationGraphPlotter.generate_graph_plot_for(census_data, simulation_step)
   end
 
+  defp plot_and_increment_step(state) do
+    plot(state.citizens, state.step)
+
+    next_step = state.step + 1
+
+    %{state | step: next_step}
+  end
+
   @impl true
   def init(:ok) do
     initial_state = %EpidemicSimulator.Structs.MedicalCenterInformation{
@@ -40,10 +48,7 @@ defmodule EpidemicSimulator.MedicalCenter do
 
   @impl true
   def handle_cast(:plot, state) do
-    plot(state.citizens, state.step)
-
-    next_step = state.step + 1
-    new_state = %{state | step: next_step}
+    new_state = plot_and_increment_step(state)
 
     {:noreply, new_state}
   end
