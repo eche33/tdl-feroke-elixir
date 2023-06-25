@@ -21,6 +21,8 @@ defmodule EpidemicSimulator.PopulationGraphPlotter do
     plot = Contex.Plot.new(dataset, Contex.PointPlot, 600, 600, options)
     {:safe, plot_as_svg_image} = Contex.Plot.to_svg(plot)
 
+
+    delete_folder_content(simulation_step)
     create_folder(@output_folder)
 
     save_plot_image(plot_as_svg_image, simulation_step)
@@ -38,6 +40,12 @@ defmodule EpidemicSimulator.PopulationGraphPlotter do
       end)
 
     statistics
+  end
+
+  defp delete_folder_content(step) do
+    if step == 0 do
+      File.rm_rf(@output_folder)
+    end
   end
 
   defp all_possible_health_statuses do

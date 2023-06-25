@@ -2,7 +2,6 @@ defmodule EpidemicSimulator.MedicalCenter do
   use GenServer
 
   @me __MODULE__
-  @output_folder "./plots/"
   @timer_name :MedicalCenter_timer
   @timer_period 1
 
@@ -24,10 +23,6 @@ defmodule EpidemicSimulator.MedicalCenter do
     next_step = state.step + 1
 
     %{state | step: next_step}
-  end
-
-  defp delete_folder_content() do
-    File.rm_rf(@output_folder)
   end
 
   @impl true
@@ -74,8 +69,6 @@ defmodule EpidemicSimulator.MedicalCenter do
 
   @impl true
   def handle_cast(:start_census, state) do
-    delete_folder_content()
-
     new_state = plot_and_increment_step(state)
 
     EpidemicSimulator.Timer.start_timer(@timer_name, MedicalCenter, @timer_period)
