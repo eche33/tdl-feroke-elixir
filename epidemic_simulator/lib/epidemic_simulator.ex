@@ -169,10 +169,6 @@ defmodule EpidemicSimulator do
 
     simulation_time = DateTime.diff(DateTime.utc_now(), state.simulation_start_datetime)
 
-    # Plotea el estado final
-    GenServer.cast(MedicalCenter, :plot)
-
-    # Termina el timer - se junta con plot de estado final
     GenServer.cast(MedicalCenter, :stop_census)
 
     population_health_status = GenServer.call(MedicalCenter, :population_health_status)
