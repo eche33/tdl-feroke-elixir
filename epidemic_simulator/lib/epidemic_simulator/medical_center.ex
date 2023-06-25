@@ -56,7 +56,7 @@ defmodule EpidemicSimulator.MedicalCenter do
 
   @impl true
   def handle_cast(:ring, state) do
-    Agent.stop(@timer_name)
+    GenServer.stop(@timer_name)
 
     new_state = plot_and_increment_step(state)
 

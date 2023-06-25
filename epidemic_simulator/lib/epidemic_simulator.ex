@@ -161,7 +161,7 @@ defmodule EpidemicSimulator do
 
   @impl true
   def handle_cast(:ring, state) do
-    Agent.stop(String.to_atom("#{@me}_timer"))
+    GenServer.stop(String.to_atom("#{@me}_timer"))
 
     Enum.each(state.population, fn person ->
       GenServer.cast(person, :stop_simulating)
