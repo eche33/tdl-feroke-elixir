@@ -49,7 +49,7 @@ defmodule EpidemicSimulator.Child do
 
   @impl true
   def handle_cast(:ring, state) do
-    Agent.stop(String.to_atom("#{state.name}_timer"))
+    GenServer.stop(String.to_atom("#{state.name}_timer"))
 
     new_health_status =
       get_next_health_status(state.health_status, state.virus, state.comorbidities)

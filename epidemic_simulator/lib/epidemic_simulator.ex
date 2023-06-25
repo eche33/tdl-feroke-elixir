@@ -46,7 +46,9 @@ defmodule EpidemicSimulator do
       raise "You need to create a population first"
     end
 
-    GenServer.cast(MedicalCenter, :plot)
+    EpidemicSimulator.PopulationGraphPlotter.delete_folder_content()
+    GenServer.cast(MedicalCenter, :start_census)
+
     GenServer.cast(@me, {:simulate_virus, time})
   end
 
@@ -160,7 +162,7 @@ defmodule EpidemicSimulator do
 
   @impl true
   def handle_cast(:ring, state) do
-    Agent.stop(String.to_atom("#{@me}_timer"))
+    GenServer.stop(String.to_atom("#{@me}_timer"))
 
     Enum.each(state.population, fn person ->
       GenServer.cast(person, :stop_simulating)
@@ -168,14 +170,15 @@ defmodule EpidemicSimulator do
 
     simulation_time = DateTime.diff(DateTime.utc_now(), state.simulation_start_datetime)
 
-    :timer.sleep(:timer.seconds(state.virus.sick_time + state.virus.incubation_time))
+    GenServer.cast(MedicalCenter, :stop_census)
 
-    GenServer.cast(MedicalCenter, :plot)
+    population_health_status = GenServer.call(MedicalCenter, :population_health_status)
 
     IO.puts("")
     IO.puts("-------------------")
     IO.puts("Simulation finished")
     IO.puts("Simulation time: #{inspect(simulation_time)}")
+    IO.puts("Population status: #{inspect(population_health_status)}")
 
     {:noreply, state}
   end

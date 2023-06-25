@@ -1,6 +1,7 @@
 defmodule EpidemicSimulator.Structs.MedicalCenterInformation do
   defstruct [
     :citizens,
-    :step
+    :step,
+    :simulation_running
   ]
 end
