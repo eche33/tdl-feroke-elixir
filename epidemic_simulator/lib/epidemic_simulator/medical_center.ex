@@ -24,6 +24,12 @@ defmodule EpidemicSimulator.MedicalCenter do
     %{state | step: next_step}
   end
 
+  defp start_medical_center_timer() do
+    timer_name = String.to_atom("MedicalCenter_timer")
+    timer_period = 1
+    EpidemicSimulator.Timer.start_timer(timer_name, MedicalCenter, timer_period)
+  end
+
   @impl true
   def init(:ok) do
     initial_state = %EpidemicSimulator.Structs.MedicalCenterInformation{
@@ -87,10 +93,7 @@ defmodule EpidemicSimulator.MedicalCenter do
 
   @impl true
   def handle_cast(:start_census, state) do
-    # Inicio la secuencia de ploteo - se puede juntar con situacion inicial
-    timer_name = String.to_atom("MedicalCenter_timer")
-    timer_period = 1
-    EpidemicSimulator.Timer.start_timer(timer_name, MedicalCenter, timer_period)
+    start_medical_center_timer()
 
     {:noreply, state}
 
