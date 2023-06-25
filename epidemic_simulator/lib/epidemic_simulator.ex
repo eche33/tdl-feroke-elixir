@@ -46,6 +46,7 @@ defmodule EpidemicSimulator do
       raise "You need to create a population first"
     end
 
+    EpidemicSimulator.PopulationGraphPlotter.delete_folder_content()
     GenServer.cast(MedicalCenter, :start_census)
 
     GenServer.cast(@me, {:simulate_virus, time})
